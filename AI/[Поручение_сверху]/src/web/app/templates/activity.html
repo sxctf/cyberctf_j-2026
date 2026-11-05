@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Лента активности{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-lg font-bold text-tn-text">Лента активности бота</h1>
+  <div class="flex items-center gap-2">
+    <span id="sse-dot" class="w-2 h-2 rounded-full bg-tn-muted"></span>
+    <span id="sse-status" class="text-xs text-tn-muted">подключение...</span>
+  </div>
+</div>
+
+<div id="activity-log"
+     class="border border-tn-border bg-tn-panel rounded-lg divide-y divide-tn-border/50 min-h-48">
+  <div class="p-8 text-center text-tn-muted text-sm" id="empty-msg">
+    Ожидание событий бота... Создайте задачу в Gitea, чтобы запустить бота.
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const log = document.getElementById('activity-log');
+const dot = document.getElementById('sse-dot');
+const status = document.getElementById('sse-status');
+
+const STATUS_COLORS = {
+  queued:    'text-tn-muted',
+  running:   'text-tn-yellow',
+  completed: 'text-tn-green',
+  error:     'text-tn-red',
+};
+
+const es = new EventSource('/events/activity');
+es.addEventListener('open', () => {
+  dot.className = 'w-2 h-2 rounded-full bg-tn-green';
+  status.textContent = 'подключено';
+});
+es.onmessage = (e) => {
+  const data = JSON.parse(e.data);
+  if (!data.job_id) return;
+
+  document.getElementById('empty-msg')?.remove();
+
+  // Update existing row or create new one
+  let row = document.getElementById('row-' + data.job_id);
+  if (!row) {
+    row = document.createElement('div');
+    row.id = 'row-' + data.job_id;
+    row.className = 'px-4 py-3 flex items-center justify-between hover:bg-tn-border/20 cursor-pointer';
+    row.onclick = () => window.location = '/runs/' + data.job_id;
+    log.prepend(row);
+  }
+
+  const sc = STATUS_COLORS[data.status] || 'text-tn-muted';
+  row.innerHTML = `
+    <div class="flex items-center gap-3">
+      <span class="text-xs ${sc} w-20 shrink-0">${data.status || '?'}</span>
+      <div>
+        <div class="text-xs text-tn-text">${data.event_type || ''} #${data.issue_number || ''}</div>
+        <div class="text-xs text-tn-muted">${data.author || ''}</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      ${data.flag_found ? '<span class="text-xs text-tn-green border border-tn-green/40 px-2 py-0.5 rounded">ФЛАГ НАЙДЕН</span>' : ''}
+      <span class="text-xs text-tn-muted">→</span>
+    </div>`;
+};
+es.onerror = () => {
+  dot.className = 'w-2 h-2 rounded-full bg-tn-red';
+  status.textContent = 'отключено';
+};
+</script>
+{% endblock %}

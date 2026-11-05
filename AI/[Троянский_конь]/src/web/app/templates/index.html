@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Сканер безопасности ML-моделей{% endblock %}
+
+{% block head %}
+<script src="/vendor/mermaid.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl">
+  <div class="mb-8">
+    <h1 class="text-xl font-bold text-tn-text mb-2">Сканер безопасности ML-моделей</h1>
+    <p class="text-tn-muted text-sm leading-relaxed">
+      Загрузите файл PyTorch-модели — мы проверим его на вредоносный pickle-код
+      сканером <span class="text-tn-blue">Picklescan v0.0.30</span>.
+      Если модель пройдёт проверку, она будет загружена в изолированной песочнице для извлечения метаданных.
+    </p>
+  </div>
+
+  <!-- How it works -->
+  <div class="border border-tn-border bg-tn-panel rounded-lg p-6 mb-6">
+    <h2 class="text-sm font-bold text-tn-text mb-4">Архитектура</h2>
+    <div class="mermaid text-xs">
+graph LR
+    A([Вы]) -->|Загрузка .pt / .bin / .pth| B[веб-сервис]
+    B --> C[Picklescan 0.0.30\nстатический анализ]
+    C -->|ЗАБЛОКИРОВАНО| D[fa:fa-times Отказ + причина]
+    C -->|ПРОЙДЕНО| E[Изолированная песочница\npickle.load]
+    E -->|RCE?| F[/flag.txt]
+    style D fill:#1a0f0f,stroke:#f7768e,color:#f7768e
+    style F fill:#0f1a0f,stroke:#9ece6a,color:#9ece6a
+    </div>
+  </div>
+
+  <!-- Rules -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    <div class="border border-tn-border bg-tn-panel rounded-lg p-4">
+      <div class="text-tn-blue text-xs font-bold mb-1">ЗАГРУЗКА</div>
+      <p class="text-tn-muted text-xs">Принимаются файлы <code class="text-tn-cyan">.pt</code>, <code class="text-tn-cyan">.bin</code>, <code class="text-tn-cyan">.pth</code> до 50 МБ</p>
+    </div>
+    <div class="border border-tn-border bg-tn-panel rounded-lg p-4">
+      <div class="text-tn-yellow text-xs font-bold mb-1">ПРОВЕРКА</div>
+      <p class="text-tn-muted text-xs">Picklescan 0.0.30 ищет опасные глобальные вызовы. Для заблокированных файлов показывается причина.</p>
+    </div>
+    <div class="border border-tn-border bg-tn-panel rounded-lg p-4">
+      <div class="text-tn-green text-xs font-bold mb-1">ЦЕЛЬ</div>
+      <p class="text-tn-muted text-xs">Соберите пейлоад, который пройдёт проверку, но выполнит код в песочнице, где лежит <code class="text-tn-cyan">flag.txt</code>.</p>
+    </div>
+  </div>
+
+  <a href="/submit"
+     class="inline-block border border-tn-blue/50 bg-tn-blue/10 text-tn-blue px-6 py-3 rounded text-sm hover:bg-tn-blue/20 transition-colors">
+    Загрузить модель →
+  </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  mermaid.initialize({theme:'dark',themeVariables:{primaryColor:'#7aa2f7',background:'#0a0e14',mainBkg:'#11151c',nodeBorder:'#1e2530',lineColor:'#565f89',textColor:'#c0caf5'}});
+  mermaid.run();
+</script>
+{% endblock %}

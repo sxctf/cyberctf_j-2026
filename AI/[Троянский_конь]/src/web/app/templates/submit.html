@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Загрузка модели{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <h1 class="text-lg font-bold text-tn-text mb-6">Загрузка PyTorch-модели</h1>
+
+  {% if isolation == 'none' %}
+  <div class="border border-tn-red/50 bg-tn-red/10 text-tn-red rounded p-4 mb-6 text-xs">
+    ⚠️ Песочница работает без программной изоляции: код из загруженного файла запускается
+    с правами учётной записи сервиса. Для публичных мероприятий запускайте песочницу в Docker —
+    с сетевой изоляцией и файловой системой только для чтения.
+  </div>
+  {% elif isolation == 'job-object' %}
+  <div class="border border-tn-yellow/40 bg-tn-yellow/5 text-tn-yellow rounded p-4 mb-6 text-xs">
+    🔒 Песочница ограничивает код из файла контейнером процессов Windows: лимиты памяти и числа
+    процессов, автоматическое завершение дочерних процессов. Для публичных мероприятий с жёсткими
+    требованиями к изоляции запускайте песочницу в Docker.
+  </div>
+  {% endif %}
+
+  <!-- Upload form -->
+  <div class="border border-tn-border bg-tn-panel rounded-lg p-6 mb-6">
+    <form id="upload-form" enctype="multipart/form-data">
+      <!-- Drag-and-drop zone -->
+      <div id="drop-zone"
+           class="border-2 border-dashed border-tn-border rounded-lg p-8 text-center cursor-pointer hover:border-tn-blue/60 transition-colors mb-4"
+           data-drop-zone="true" data-input-id="file-input">
+        <div class="text-tn-muted text-sm mb-2">Перетащите файл модели сюда</div>
+        <div class="text-xs text-tn-muted mb-3">или выберите его вручную</div>
+        <div class="text-xs text-tn-blue" data-filename>.pt / .bin / .pth — до 50 МБ</div>
+        <input type="file" id="file-input" name="file" class="hidden"
+               accept=".pt,.bin,.pth,.pkl" required/>
+      </div>
+
+      {% if team %}
+      <button type="submit" id="submit-btn"
+              class="w-full border border-tn-blue/50 bg-tn-blue/10 text-tn-blue py-2 rounded hover:bg-tn-blue/20 transition-colors text-sm">
+        Проверить и загрузить
+      </button>
+      {% else %}
+      <button type="button" disabled
+              class="w-full border border-tn-border text-tn-muted py-2 rounded text-sm cursor-not-allowed">
+        Требуется вход
+      </button>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Status timeline (hidden until job started) -->
+  <div id="job-panel" class="hidden">
+    <h2 class="text-sm font-bold text-tn-text mb-4">Ход проверки</h2>
+    <div id="timeline" class="border border-tn-border bg-tn-panel rounded-lg divide-y divide-tn-border"></div>
+
+    <!-- Loader output (shown after load completes) -->
+    <div id="output-panel" class="hidden mt-4 border border-tn-border bg-tn-panel rounded-lg p-5">
+      <h3 class="text-xs font-bold text-tn-text mb-3">Вывод песочницы</h3>
+      <pre id="output-stdout" class="text-xs text-tn-text whitespace-pre-wrap font-mono"></pre>
+      <pre id="output-stderr" class="text-xs text-tn-red whitespace-pre-wrap font-mono mt-2"></pre>
+      <div id="exfil-panel" class="hidden mt-3">
+        <div class="text-xs font-bold text-tn-green mb-2">Файлы, попавшие в /exfil/:</div>
+        <div id="exfil-list" class="space-y-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Drag & drop
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const filenameEl = dropZone.querySelector('[data-filename]');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-tn-blue'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-tn-blue'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('border-tn-blue');
+  const dt = new DataTransfer(); dt.items.add(e.dataTransfer.files[0]);
+  fileInput.files = dt.files;
+  filenameEl.textContent = e.dataTransfer.files[0].name;
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length) filenameEl.textContent = fileInput.files[0].name;
+});
+
+// Upload + SSE
+const form = document.getElementById('upload-form');
+const jobPanel = document.getElementById('job-panel');
+const timeline = document.getElementById('timeline');
+
+const STEPS = {
+  received:     {icon:'✓', label:'Файл получен',      color:'text-tn-blue'},
+  scanning:     {icon:'⟳', label:'Анализ Picklescan',color:'text-tn-yellow'},
+  scan_clean:   {icon:'✓', label:'Сканер пропустил',        color:'text-tn-green'},
+  scan_blocked: {icon:'✗', label:'Заблокировано сканером',       color:'text-tn-red'},
+  loading:      {icon:'⟳', label:'Выполнение в песочнице',  color:'text-tn-yellow'},
+  done:         {icon:'✓', label:'Готово',            color:'text-tn-green'},
+  error:        {icon:'✗', label:'Ошибка',               color:'text-tn-red'},
+};
+
+function addTimelineRow(step, msg, detail) {
+  const s = STEPS[step] || {icon:'·', label:step, color:'text-tn-muted'};
+  const row = document.createElement('div');
+  row.id = 'step-' + step;
+  row.className = 'px-4 py-3 flex items-start gap-3';
+  row.innerHTML = `
+    <span class="shrink-0 ${s.color} font-bold w-4">${s.icon}</span>
+    <div class="flex-1 min-w-0">
+      <div class="text-xs font-bold ${s.color}">${s.label}</div>
+      <div class="text-xs text-tn-muted mt-0.5">${msg||''}</div>
+      ${detail ? `<pre class="text-xs text-tn-red mt-1 whitespace-pre-wrap">${detail}</pre>` : ''}
+    </div>`;
+  // Replace existing row for this step
+  const existing = document.getElementById('step-' + step);
+  if (existing) existing.replaceWith(row); else timeline.appendChild(row);
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(form);
+  if (!fd.get('file') || !fd.get('file').size) { showToast('Сначала выберите файл', 'error'); return; }
+
+  document.getElementById('submit-btn').disabled = true;
+  jobPanel.classList.remove('hidden');
+  timeline.innerHTML = '';
+  document.getElementById('output-panel').classList.add('hidden');
+
+  // Upload
+  addTimelineRow('received', 'Загрузка…', '');
+  let jobId;
+  try {
+    const resp = await fetch('/api/upload', {method:'POST', body: fd});
+    if (!resp.ok) { const e = await resp.json(); throw new Error(e.detail||'Не удалось загрузить файл'); }
+    const data = await resp.json();
+    jobId = data.job_id;
+    addTimelineRow('received', `Размер: ${(data.size/1024).toFixed(1)} КБ · SHA256: ${data.sha256.slice(0,16)}…`, '');
+  } catch(err) {
+    addTimelineRow('error', err.message, ''); return;
+  }
+
+  // SSE stream
+  const es = new EventSource(`/events/jobs/${jobId}`);
+  es.onmessage = (e) => {
+    const ev = JSON.parse(e.data);
+    addTimelineRow(ev.step, ev.msg, ev.detail||'');
+
+    if (ev.step === 'done') {
+      es.close();
+      showOutput(jobId);
+      document.getElementById('submit-btn').disabled = false;
+    }
+    if (ev.step === 'scan_blocked') {
+      es.close();
+      document.getElementById('submit-btn').disabled = false;
+    }
+    if (ev.step === 'error') {
+      es.close();
+      document.getElementById('submit-btn').disabled = false;
+    }
+  };
+  es.onerror = () => { es.close(); document.getElementById('submit-btn').disabled = false; };
+});
+
+async function showOutput(jobId) {
+  const resp = await fetch(`/api/jobs/${jobId}`);
+  if (!resp.ok) return;
+  const job = await resp.json();
+  const panel = document.getElementById('output-panel');
+  panel.classList.remove('hidden');
+  document.getElementById('output-stdout').textContent = job.loader_stdout || '(нет вывода)';
+  document.getElementById('output-stderr').textContent = job.loader_stderr || '';
+  if (job.exfil && job.exfil.length > 0) {
+    const exfilPanel = document.getElementById('exfil-panel');
+    exfilPanel.classList.remove('hidden');
+    const list = document.getElementById('exfil-list');
+    list.innerHTML = '';
+    job.exfil.forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'border border-tn-green/40 bg-tn-green/5 rounded p-3';
+      div.innerHTML = `<div class="text-xs text-tn-green font-bold mb-1">${f.filename} (${f.size} байт)</div>
+                       <pre class="text-xs text-tn-text whitespace-pre-wrap">${f.content}</pre>`;
+      list.appendChild(div);
+    });
+  }
+}
+</script>
+{% endblock %}

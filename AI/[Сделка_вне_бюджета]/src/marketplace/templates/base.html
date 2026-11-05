@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}ShopBot Marketplace{% endblock %}</title>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --ink-soft: #55627a;
+      --ink-faint: #8892a6;
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --line: #e3e8f0;
+      --accent: #1d4ed8;
+      --accent-hover: #1741b6;
+      --accent-soft: #eaf0fe;
+      --success: #16875f;
+      --success-soft: #e6f6ef;
+      --danger: #c2372f;
+      --danger-soft: #fdeeed;
+      --star: #f5a623;
+      --radius: 14px;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 6px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.09);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, textarea { font: inherit; }
+
+    .header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--line);
+      padding: 0 28px;
+      height: 62px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.12rem; font-weight: 700; letter-spacing: -0.01em;
+    }
+    .logo-mark {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; font-weight: 800;
+    }
+    .logo-mark b { color: #bfdbfe; }
+    .header nav { display: flex; align-items: center; gap: 6px; }
+    .header nav a {
+      padding: 8px 14px; border-radius: 10px; font-size: 0.92rem;
+      color: var(--ink-soft); font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+    }
+    .header nav a:hover { background: var(--accent-soft); color: var(--accent); }
+    .cart-link { display: flex; align-items: center; gap: 8px; }
+    .cart-badge {
+      min-width: 22px; height: 22px; padding: 0 6px;
+      background: var(--accent); color: #fff;
+      border-radius: 999px; font-size: 0.75rem; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .container { width: 100%; max-width: 1120px; margin: 0 auto; padding: 28px; flex: 1; }
+
+    .footer {
+      border-top: 1px solid var(--line);
+      padding: 18px 28px; text-align: center;
+      color: var(--ink-faint); font-size: 0.8rem;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px 20px; border: none; border-radius: 11px;
+      font-size: 0.92rem; font-weight: 600; cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: #106e4e; }
+    .btn-block { width: 100%; }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+    .muted { color: var(--ink-soft); }
+    .faint { color: var(--ink-faint); }
+    .price { color: var(--ink); font-weight: 700; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 0.74rem; font-weight: 600;
+    }
+    .pill-ok  { background: var(--success-soft); color: var(--success); }
+    .pill-bad { background: var(--danger-soft); color: var(--danger); }
+    .stars { color: var(--star); letter-spacing: 1px; }
+    .stars .off { color: #d4dae4; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="brand">
+      <span class="logo-mark">S<b>B</b></span>
+      ShopBot&nbsp;Marketplace
+    </a>
+    <nav>
+      <a href="/">Товары</a>
+      <a href="/cart" class="cart-link">Корзина <span class="cart-badge">{{ cart_count | default(0) }}</span></a>
+    </nav>
+  </header>
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer class="footer">
+    ShopBot Marketplace · Покупайте технику безопасно · support@shopbot.example
+  </footer>
+</body>
+</html>

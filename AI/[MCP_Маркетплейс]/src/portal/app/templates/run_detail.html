@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Run {{ session_id[:8] }} — Task 07{% endblock %}
+
+{% block head %}
+<style>
+  .role-system      { color: #565f89; }
+  .role-agent       { color: #7aa2f7; }
+  .role-assistant   { color: #c0caf5; }
+  .role-tool_call   { color: #bb9af7; }
+  .role-tool_result { color: #9ece6a; }
+  .role-error       { color: #f7768e; }
+  .role-green       { color: #9ece6a; }
+  .role-red         { color: #f7768e; }
+  .role-blue        { color: #7aa2f7; }
+
+  #transcript-log { max-height: 600px; overflow-y: auto; scroll-behavior: smooth; }
+  .entry-line { border-left: 2px solid #1e2530; padding-left: 0.75rem; margin-bottom: 0.5rem; }
+  .entry-line:hover { border-left-color: #565f89; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-6">
+  <a href="/" class="text-tn-muted hover:text-tn-blue text-xs transition-colors">← Обзор</a>
+  <span class="text-tn-border">/</span>
+  <span class="text-tn-text text-xs font-mono">Run {{ session_id }}</span>
+</div>
+
+<!-- Status bar -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="bg-tn-panel border border-tn-border rounded-lg p-4">
+    <div class="text-tn-muted text-xs mb-1">Статус</div>
+    <div id="run-status"
+         class="font-bold text-sm
+                {% if run.status == 'completed' %}text-tn-green
+                {% elif run.status == 'running' %}text-tn-yellow
+                {% elif run.status == 'error' %}text-tn-red
+                {% else %}text-tn-muted{% endif %}">
+      {{ run.status | upper }}
+    </div>
+  </div>
+  <div class="bg-tn-panel border border-tn-border rounded-lg p-4">
+    <div class="text-tn-muted text-xs mb-1">Флаг</div>
+    <div id="flag-status" class="font-bold text-sm {% if run.flag_found %}text-tn-green{% else %}text-tn-muted{% endif %}">
+      {% if run.flag_found %}✓ ЗАХВАЧЕН{% else %}ЕЩЁ НЕТ{% endif %}
+    </div>
+  </div>
+  <div class="bg-tn-panel border border-tn-border rounded-lg p-4">
+    <div class="text-tn-muted text-xs mb-1">Вызовы инструментов</div>
+    <div id="tool-count" class="font-bold text-sm text-tn-yellow">{{ run.tool_calls }}</div>
+  </div>
+  <div class="bg-tn-panel border border-tn-border rounded-lg p-4">
+    <div class="text-tn-muted text-xs mb-1">Попаданий эксфил</div>
+    <div class="font-bold text-sm {% if exfil_logs %}text-tn-purple{% else %}text-tn-muted{% endif %}">
+      {{ exfil_logs | length }}
+    </div>
+  </div>
+</div>
+
+{% if run.flag_found %}
+<div class="bg-green-900/20 border border-tn-green/40 rounded-lg px-5 py-4 mb-6">
+  <div class="text-tn-green font-bold text-sm mb-1">Флаг захвачен!</div>
+  <code class="text-tn-green font-mono">{{ run.flag_value }}</code>
+  <span class="text-tn-muted text-xs ml-3">через {{ run.flag_source }}</span>
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Transcript -->
+  <div class="lg:col-span-2">
+    <div class="bg-tn-panel border border-tn-border rounded-lg p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-tn-text text-sm font-bold">Транскрипт</h2>
+        <span id="live-indicator"
+              class="text-xs text-tn-muted
+                     {% if run.status in ('pending','running') %}animate-pulse text-tn-yellow{% endif %}">
+          {% if run.status in ('pending','running') %}● В ЭФИРЕ{% else %}● ЗАВЕРШЕНО{% endif %}
+        </span>
+      </div>
+
+      <div id="transcript-log" class="text-xs leading-relaxed space-y-1 font-mono">
+        {% for entry in run.transcript %}
+        <div class="entry-line role-{{ entry.role }}">
+          <span class="text-tn-muted">[{{ entry.role }}]</span>
+          {% if entry.role == 'tool_call' %}
+          <span class="role-{{ entry.get('color','blue') }}"> {{ entry.content }}</span>
+          <span class="text-tn-muted text-xs"> via {{ entry.get('server','?') }}</span>
+          {% elif entry.role == 'tool_result' %}
+          <span class="role-{{ entry.get('color','green') }}">
+            <pre class="whitespace-pre-wrap break-words mt-1 ml-4">{{ entry.content }}</pre>
+          </span>
+          {% else %}
+          <span class="role-{{ entry.role }}">
+            <pre class="whitespace-pre-wrap break-words mt-1 ml-4">{{ entry.content }}</pre>
+          </span>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <div id="transcript-end"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exfil sidebar -->
+  <div class="lg:col-span-1 space-y-4">
+    <div class="bg-tn-panel border border-tn-border rounded-lg p-5">
+      <h2 class="text-tn-text text-sm font-bold mb-4">Приёмник эксфильтрации</h2>
+      {% if exfil_logs %}
+        <div class="space-y-3 max-h-80 overflow-y-auto">
+          {% for entry in exfil_logs %}
+          <div class="text-xs border border-tn-border/50 rounded p-2 {% if entry.flags_found %}bg-green-900/20 border-green-700/40{% endif %}">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-tn-muted font-mono">{{ entry.method }} {{ entry.path }}</span>
+              {% if entry.flags_found %}
+                <span class="text-tn-green font-bold">FLAG!</span>
+              {% endif %}
+            </div>
+            {% if entry.flags_found %}
+              {% for flag in entry.flags_found %}
+              <div class="text-tn-green font-mono mt-1">{{ flag }}</div>
+              {% endfor %}
+            {% else %}
+              <div class="text-tn-muted">{{ entry.body[:100] }}{% if entry.body|length > 100 %}…{% endif %}</div>
+            {% endif %}
+            <div class="text-tn-muted/60 mt-1">{{ entry.ts[:19] }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-tn-muted text-xs">Запросов эксфильтрации ещё нет.</p>
+        <a href="/exfil" class="text-tn-blue text-xs hover:text-tn-cyan transition-colors mt-2 inline-block">Просмотреть полный лог →</a>
+      {% endif %}
+    </div>
+
+    <!-- Task info -->
+    <div class="bg-tn-panel border border-tn-border rounded-lg p-5">
+      <h2 class="text-tn-text text-sm font-bold mb-3">Задача агента</h2>
+      <pre class="text-xs text-tn-text leading-relaxed whitespace-pre-wrap">{{ run.task }}</pre>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if run.status in ('pending', 'running') %}
+<script>
+(function() {
+  const log    = document.getElementById('transcript-log');
+  const status = document.getElementById('run-status');
+  const flag   = document.getElementById('flag-status');
+  const tools  = document.getElementById('tool-count');
+  const live   = document.getElementById('live-indicator');
+  let toolCount = {{ run.tool_calls }};
+
+  const es = new EventSource('/events/runs/{{ session_id }}');
+
+  es.onmessage = function(e) {
+    const msg = JSON.parse(e.data);
+
+    if (msg.type === 'status') {
+      status.textContent = msg.status.toUpperCase();
+    }
+
+    if (msg.type === 'completed' || msg.type === 'error') {
+      es.close();
+      live.textContent = '● ЗАВЕРШЕНО';
+      live.classList.remove('animate-pulse','text-tn-yellow');
+      live.classList.add('text-tn-muted');
+      if (msg.flag_found) {
+        flag.textContent = '✓ ЗАХВАЧЕН';
+        flag.className = 'font-bold text-sm text-tn-green';
+        // Reload to show full results
+        setTimeout(() => location.reload(), 1000);
+      }
+      return;
+    }
+
+    // Append transcript entries
+    if (msg.transcript) {
+      // Full transcript update on completion
+      return;
+    }
+
+    // Individual entry from transcript list
+    if (msg.role) {
+      const entry = document.createElement('div');
+      entry.className = `entry-line role-${msg.role}`;
+
+      const roleSpan = document.createElement('span');
+      roleSpan.className = 'text-tn-muted';
+      roleSpan.textContent = `[${msg.role}] `;
+      entry.appendChild(roleSpan);
+
+      const content = document.createElement('pre');
+      content.className = 'whitespace-pre-wrap break-words mt-1 ml-4';
+      content.textContent = msg.content || '';
+      entry.appendChild(content);
+
+      const end = document.getElementById('transcript-end');
+      log.insertBefore(entry, end);
+      log.scrollTop = log.scrollHeight;
+
+      if (msg.role === 'tool_call') {
+        toolCount++;
+        tools.textContent = toolCount;
+      }
+    }
+  };
+
+  es.onerror = function() {
+    live.textContent = '● ОТКЛЮЧЕНО';
+    live.classList.remove('animate-pulse','text-tn-yellow');
+    live.classList.add('text-tn-red');
+  };
+
+  // Poll for completion every 5s as fallback
+  const pollTimer = setInterval(async () => {
+    const r = await fetch('/api/runs/{{ session_id }}').catch(() => null);
+    if (!r) return;
+    const data = await r.json();
+    if (data.status === 'completed' || data.status === 'error') {
+      clearInterval(pollTimer);
+      location.reload();
+    }
+  }, 5000);
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}AutoFix Bot{% endblock %} — Task 05</title>
+  <script src="/vendor/tailwind-play.js"></script>
+  <script src="/vendor/htmx.min.js" defer></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { tn: {
+        bg:'#0a0e14', panel:'#11151c', border:'#1e2530',
+        blue:'#7aa2f7', green:'#9ece6a', red:'#f7768e',
+        yellow:'#e0af68', purple:'#bb9af7', cyan:'#7dcfff',
+        text:'#c0caf5', muted:'#565f89'
+      }}, fontFamily: { mono: ['ui-monospace', 'Consolas', 'monospace'] } } }
+    }
+  </script>
+  <style>
+    body { font-family: ui-monospace, Consolas, monospace; background: #0a0e14; color: #c0caf5; }
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: #0a0e14; }
+    ::-webkit-scrollbar-thumb { background: #1e2530; border-radius: 3px; }
+    .tool-call { border-left: 2px solid #7aa2f7; }
+    .tool-result { border-left: 2px solid #565f89; }
+    .flag-highlight { background: rgba(158,206,106,0.15); border: 1px solid #9ece6a; border-radius: 4px; padding: 2px 6px; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col">
+  <header class="border-b border-tn-border bg-tn-panel sticky top-0 z-50">
+    <nav class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="/" class="text-tn-blue font-bold text-sm">AutoFix Bot <span class="text-tn-muted font-normal text-xs">task-05</span></a>
+      </div>
+      <div class="flex items-center gap-5 text-xs">
+        <a href="/" class="text-tn-text hover:text-tn-blue">Обзор</a>
+        <a href="/setup" class="text-tn-text hover:text-tn-blue">Настройка</a>
+        <a href="/activity" class="text-tn-text hover:text-tn-blue">Активность</a>
+        <a href="/inbox" class="text-tn-text hover:text-tn-blue">Входящие</a>
+        <a href="{{ gitea_url }}" target="_blank" class="text-tn-purple hover:text-tn-blue">Gitea ↗</a>
+          <span class="text-tn-muted">{{ team.team_name }}</span>
+      </div>
+    </nav>
+  </header>
+
+  <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-t border-tn-border bg-tn-panel">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between text-xs text-tn-muted">
+      <span>WidgetCorp AutoFix Bot</span>
+    </div>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Run {{ session_id[:8] }} — Task 06{% endblock %}
+
+{% block head %}
+<style>
+  #screenshot-frame { width: 100%; height: 450px; border: 1px solid #1e2530; border-radius: 6px; background: #0a0e14; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  #screenshot-frame img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  #transcript-log { max-height: 400px; overflow-y: auto; font-size: 0.7rem; }
+  .entry-agent   { color: #7aa2f7; }
+  .entry-browser { color: #9ece6a; }
+  .entry-system  { color: #565f89; }
+  .entry-error   { color: #f7768e; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-6">
+  <a href="/" class="text-tn-muted hover:text-tn-blue text-xs transition-colors">← Обзор</a>
+  <span class="text-tn-border">/</span>
+  <span class="text-tn-text text-xs font-mono">Run {{ session_id }}</span>
+</div>
+
+{% if flag %}
+<div class="bg-green-900/20 border border-tn-green/40 rounded-lg px-5 py-4 mb-6">
+  <div class="text-tn-green font-bold mb-1">Агент обманут — флаг получен!</div>
+  <code class="text-tn-green font-mono text-sm">{{ flag }}</code>
+</div>
+{% endif %}
+
+<!-- Status row -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+  <div class="bg-tn-panel border border-tn-border rounded-lg p-4">
+    <div class="text-tn-muted text-xs mb-1">Статус</div>
+    <div id="run-status" class="font-bold text-sm
+         {% if run.status == 'completed' %}text-tn-green
+         {% elif run.status == 'running' %}text-tn-yellow
+         {% elif run.status == 'error' %}text-tn-red
+         {% else %}text-tn-muted{% endif %}">
+      {{ run.status | upper }}
+    </div>
+  </div>
+  <div class="bg-tn-panel border border-tn-border rounded-lg p-4">
+    <div class="text-tn-muted text-xs mb-1">Куплено</div>
+    <div class="font-bold text-sm {% if run.purchased %}text-tn-green{% else %}text-tn-muted{% endif %}">
+      {{ "YES" if run.purchased else "NO" }}
+    </div>
+  </div>
+  <div class="bg-tn-panel border border-tn-border rounded-lg p-4">
+    <div class="text-tn-muted text-xs mb-1">Сумма</div>
+    <div class="font-bold text-sm {% if run.purchased_amount > 5000 %}text-tn-red{% else %}text-tn-green{% endif %}">
+      {{ "{:,}".format(run.purchased_amount) + " ₽" if run.purchased_amount else "—" }}
+    </div>
+  </div>
+  <div class="bg-tn-panel border border-tn-border rounded-lg p-4">
+    <div class="text-tn-muted text-xs mb-1">Ваш вендор</div>
+    <div class="font-bold text-sm {% if run.vendor_bought %}text-tn-purple{% else %}text-tn-muted{% endif %}">
+      {{ "BOUGHT" if run.vendor_bought else "—" }}
+    </div>
+  </div>
+  <div class="bg-tn-panel border border-tn-border rounded-lg p-4">
+    <div class="text-tn-muted text-xs mb-1">Флаг</div>
+    <div class="font-bold text-sm {% if run.flag_earned %}text-tn-green{% else %}text-tn-muted{% endif %}">
+      {{ "✓ EARNED" if run.flag_earned else "—" }}
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Screenshot viewer -->
+  <div>
+    <div class="bg-tn-panel border border-tn-border rounded-lg p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-tn-text text-sm font-bold">Скриншоты браузера</h2>
+        <span id="screenshot-counter" class="text-tn-muted text-xs">
+          {% if run.screenshots %}{{ run.screenshots | length }} кадров{% else %}—{% endif %}
+        </span>
+      </div>
+      <div id="screenshot-frame">
+        {% if run.screenshots %}
+          <img id="screenshot-img" src="data:image/png;base64,{{ run.screenshots[-1] }}" alt="Browser screenshot"/>
+        {% else %}
+          <span class="text-tn-muted text-xs">Скриншотов пока нет</span>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2 mt-3">
+        <button onclick="prevScreenshot()" class="text-xs border border-tn-border text-tn-muted px-3 py-1 rounded hover:text-tn-text transition-colors">← Пред</button>
+        <span id="frame-indicator" class="text-xs text-tn-muted flex-1 text-center">—</span>
+        <button onclick="nextScreenshot()" class="text-xs border border-tn-border text-tn-muted px-3 py-1 rounded hover:text-tn-text transition-colors">След →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transcript -->
+  <div>
+    <div class="bg-tn-panel border border-tn-border rounded-lg p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-tn-text text-sm font-bold">Транскрипт агента</h2>
+        <span id="live-dot" class="text-xs {% if run.status in ('pending','running') %}text-tn-yellow animate-pulse{% else %}text-tn-muted{% endif %}">
+          {% if run.status in ('pending','running') %}● В ЭФИРЕ{% else %}● ГОТОВО{% endif %}
+        </span>
+      </div>
+      <div id="transcript-log" class="space-y-1 font-mono leading-relaxed">
+        {% for entry in run.transcript %}
+        <div class="entry-{{ entry.role }} border-l-2 border-tn-border pl-2 mb-1">
+          <span class="text-tn-muted">[{{ entry.role }}]</span>
+          <span class="ml-1">{{ entry.content[:300] }}{% if entry.content | length > 300 %}…{% endif %}</span>
+        </div>
+        {% endfor %}
+        <div id="transcript-end"></div>
+      </div>
+    </div>
+
+    <!-- Task shown to agent -->
+    <div class="bg-tn-panel border border-tn-border rounded-lg p-5 mt-4">
+      <h2 class="text-tn-text text-sm font-bold mb-2">Задача агента</h2>
+      <pre class="text-xs text-tn-text leading-relaxed whitespace-pre-wrap">{{ run.task }}</pre>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if run.status in ('pending', 'running') %}
+<script>
+// Poll API every 5s; reload page when agent finishes (transcript saved only on completion)
+async function checkStatus() {
+  try {
+    const r = await fetch('/api/runs/{{ session_id }}');
+    if (!r.ok) return;
+    const data = await r.json();
+    if (data.status === 'completed' || data.status === 'error') {
+      location.reload();
+    }
+  } catch(e) {}
+}
+setInterval(checkStatus, 5000);
+</script>
+{% else %}
+<script>
+const allScreenshots = {{ run.screenshots | tojson }};
+let currentFrame = allScreenshots.length - 1;
+
+function showFrame(idx) {
+  if (!allScreenshots.length) return;
+  idx = Math.max(0, Math.min(allScreenshots.length - 1, idx));
+  currentFrame = idx;
+  const img = document.getElementById('screenshot-img');
+  if (!img) {
+    const frame = document.getElementById('screenshot-frame');
+    frame.innerHTML = `<img id="screenshot-img" src="data:image/png;base64,${allScreenshots[idx]}" alt="screenshot"/>`;
+  } else {
+    img.src = `data:image/png;base64,${allScreenshots[idx]}`;
+  }
+  document.getElementById('frame-indicator').textContent = `${idx+1} / ${allScreenshots.length}`;
+}
+
+function prevScreenshot() { showFrame(currentFrame - 1); }
+function nextScreenshot()  { showFrame(currentFrame + 1); }
+
+if (allScreenshots.length) {
+  showFrame(currentFrame);
+  document.getElementById('frame-indicator').textContent = `${currentFrame+1} / ${allScreenshots.length}`;
+  document.getElementById('screenshot-counter').textContent = `${allScreenshots.length} кадров`;
+}
+</script>
+{% endif %}
+{% endblock %}

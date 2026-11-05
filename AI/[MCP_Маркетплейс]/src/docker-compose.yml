@@ -1,0 +1,131 @@
+name: ctf-poisoned-mcp
+
+networks:
+  llm-net:
+  public:
+  task07-net:
+    internal: true
+
+volumes:
+  task07-orch-data:
+
+services:
+  task07-legit-fs:
+    build:
+      context: ./legit-fs
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task07-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8010/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task07-secrets:
+    build:
+      context: ./secrets-vault
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task07-net
+    environment:
+      FLAG_TASK_07: ${FLAG_TASK_07:-FLAG{task07_dev}}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8011/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task07-exfil:
+    build:
+      context: ./exfil-listener
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task07-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8012/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task07-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task07-net
+      - llm-net
+    environment:
+      LLM_BACKEND_URL:      ${LLM_BACKEND_URL:-}
+      LLM_MODEL:            ${LLM_MODEL:-Qwen/Qwen2.5-Coder-32B-Instruct}
+      OPENAI_API_KEY:       ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY:    ${ANTHROPIC_API_KEY:-}
+      GIGACHAT_API_KEY:     ${GIGACHAT_API_KEY:-}
+      GIGACHAT_CREDENTIALS: ${GIGACHAT_CREDENTIALS:-}
+      GIGACHAT_SCOPE:       ${GIGACHAT_SCOPE:-GIGACHAT_API_PERS}
+      GIGACHAT_MODEL:       ${GIGACHAT_MODEL:-GigaChat-Pro}
+      EXFIL_LISTENER_URL: http://task07-exfil:8012
+    depends_on:
+      task07-exfil:
+        condition: service_healthy
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8013/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task07-orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task07-net
+    volumes:
+      - task07-orch-data:/data
+    environment:
+      AGENT_URL:            http://task07-agent:8013
+      # The MCP servers publish the streamable-HTTP endpoint at /mcp; without
+      # the path the agent's MCP client gets 404 and the vault is unreachable.
+      LEGIT_FS_URL:         http://task07-legit-fs:8010/mcp
+      SECRETS_URL:          http://task07-secrets:8011/mcp
+      EXFIL_LISTENER_URL:   http://task07-exfil:8012
+      ORCH_PUBLIC_URL:      http://task07-orchestrator:8014
+      ORCH_DB_PATH:         /data/orchestrator.db
+    depends_on:
+      task07-agent:
+        condition: service_healthy
+      task07-legit-fs:
+        condition: service_healthy
+      task07-secrets:
+        condition: service_healthy
+      task07-exfil:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8014/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task07-web:
+    build:
+      context: ./portal
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8300}:8000"
+    networks:
+      - public
+      - task07-net
+    environment:
+      ORCH_URL:  http://task07-orchestrator:8014
+      EXFIL_URL: http://task07-exfil:8012
+    depends_on:
+      task07-orchestrator:
+        condition: service_healthy

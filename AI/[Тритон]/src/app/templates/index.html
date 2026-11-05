@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TritonWebMid</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="site-header">
+        <div class="nav">
+          <a class="brand" href="/" aria-label="TritonWebMid">
+            <span class="brand-mark">T</span>
+            <span>TritonWebMid</span>
+          </a>
+          <div class="status-pill" id="healthStatus">проверка</div>
+        </div>
+      </header>
+
+      <main class="compact-main" id="operations">
+        <section class="panel tabs-panel" aria-labelledby="workspace-title">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Рабочая станция</p>
+              <h1 id="workspace-title">Инференс / Shared Memory / Диагностика</h1>
+            </div>
+          </div>
+
+          <div class="tabs-nav" role="tablist" aria-label="Разделы">
+            <button class="tab-button is-active" id="tabButtonInference" type="button" data-tab-target="inference" role="tab" aria-controls="tabInference" aria-selected="true">Инференс</button>
+            <button class="tab-button" id="tabButtonMemory" type="button" data-tab-target="memory" role="tab" aria-controls="tabMemory" aria-selected="false">Shared Memory</button>
+            <button class="tab-button" id="tabButtonDebug" type="button" data-tab-target="debug" role="tab" aria-controls="tabDebug" aria-selected="false">Диагностика</button>
+          </div>
+
+          <section class="tab-panel is-active" id="tabInference" data-tab-panel="inference" role="tabpanel" aria-labelledby="tabButtonInference">
+            <div class="tab-layout">
+              <div class="work-block">
+                <div class="section-head section-head-form request-head">
+                  <div class="request-title">
+                    <p class="eyebrow">Инференс</p>
+                    <h2>Запрос модели</h2>
+                  </div>
+                  <label class="model-select">
+                    <span>Модель</span>
+                    <select id="modelSelect" aria-label="Целевая модель"></select>
+                  </label>
+                </div>
+                <textarea id="requestBody" spellcheck="false" aria-label="Тело запроса инференса" placeholder="Введите JSON-запрос"></textarea>
+                <div class="actions actions-grid">
+                  <button id="sendRequest" type="button">Запустить</button>
+                </div>
+              </div>
+
+              <div class="work-block response-block">
+                <div class="response-header">
+                  <p class="eyebrow">Ответ</p>
+                  <span id="responseMeta">ожидание ответа</span>
+                </div>
+                <pre id="responseBody">Ответ появится здесь.</pre>
+              </div>
+            </div>
+          </section>
+
+          <section class="tab-panel" id="tabMemory" data-tab-panel="memory" role="tabpanel" aria-labelledby="tabButtonMemory" hidden>
+            <div class="tab-layout">
+              <div class="work-block">
+                <div class="section-head section-head-form">
+                  <div>
+                    <p class="eyebrow">Shared Memory</p>
+                    <h2>Чтение региона</h2>
+                  </div>
+                </div>
+                <textarea id="memoryBody" spellcheck="false" aria-label="Тело shared-memory запроса" placeholder="Введите JSON-запрос"></textarea>
+                <div class="actions actions-grid">
+                  <button id="readMemory" type="button">Прочитать</button>
+                </div>
+              </div>
+
+              <div class="work-block response-block">
+                <div class="response-header">
+                  <p class="eyebrow">Ответ</p>
+                  <span id="memoryMeta">ожидание ответа</span>
+                </div>
+                <pre id="memoryResponseBody">Ответ появится здесь.</pre>
+              </div>
+            </div>
+          </section>
+
+          <section class="tab-panel" id="tabDebug" data-tab-panel="debug" role="tabpanel" aria-labelledby="tabButtonDebug" hidden>
+            <div class="tab-layout">
+              <div class="work-block">
+                <div class="section-head section-head-form">
+                  <div>
+                    <p class="eyebrow">Диагностика</p>
+                    <h2>Диагностический запрос</h2>
+                  </div>
+                </div>
+                <textarea id="debugBody" spellcheck="false" aria-label="Тело диагностического запроса" placeholder="Введите JSON-запрос"></textarea>
+                <div class="actions actions-grid">
+                  <button id="runDebug" type="button">Запустить диагностику</button>
+                </div>
+              </div>
+
+              <div class="work-block response-block">
+                <div class="response-header">
+                  <p class="eyebrow">Ответ</p>
+                  <span id="debugMeta">ожидание ответа</span>
+                </div>
+                <pre id="debugResponseBody">Ответ появится здесь.</pre>
+              </div>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

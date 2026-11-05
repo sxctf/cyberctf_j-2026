@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}DNS-журнал{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-lg font-bold text-tn-text">Журнал DNS-запросов</h1>
+  <div class="flex items-center gap-2">
+    <span id="conn-indicator" class="inline-block w-2 h-2 rounded-full bg-tn-muted"></span>
+    <span class="text-xs text-tn-muted" id="conn-status">подключение…</span>
+  </div>
+</div>
+
+<div class="mb-4 text-xs text-tn-muted border border-tn-border bg-tn-panel rounded p-3">
+  Здесь в реальном времени видны DNS-запросы из песочницы.
+  Если ваш пейлоад вызовет <code class="text-tn-cyan">ssl.get_server_certificate("data.here.dns")</code>
+  или что-то похожее, обращение к этому домену появится ниже.
+</div>
+
+<!-- Live log -->
+<div class="border border-tn-border bg-tn-panel rounded-lg overflow-hidden">
+  <div class="border-b border-tn-border px-4 py-2 flex items-center justify-between">
+    <span class="text-xs text-tn-muted uppercase tracking-wider">DNS-запросы в реальном времени</span>
+    <button onclick="clearLog()" class="text-xs text-tn-muted hover:text-tn-red">очистить</button>
+  </div>
+  <div id="dns-log"
+       class="h-96 overflow-y-auto p-4 font-mono text-xs space-y-1">
+    <span class="text-tn-muted">Ожидание DNS-запросов…</span>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const logEl = document.getElementById('dns-log');
+const connEl = document.getElementById('conn-indicator');
+const statusEl = document.getElementById('conn-status');
+let logEntries = [];
+
+function clearLog() {
+  logEntries = [];
+  logEl.innerHTML = '<span class="text-tn-muted">Очищено.</span>';
+}
+
+function appendEntry(e) {
+  if (logEntries.length === 0) logEl.innerHTML = '';
+  logEntries.push(e);
+
+  const row = document.createElement('div');
+  row.className = 'flex gap-3';
+  const ts = e.ts.split('T')[1].split('.')[0];
+  row.innerHTML = `
+    <span class="text-tn-muted shrink-0">${ts}</span>
+    <span class="text-tn-muted shrink-0">${e.client}</span>
+    <span class="text-tn-yellow shrink-0">${e.qtype}</span>
+    <span class="text-tn-cyan break-all">${e.qname}</span>`;
+  logEl.appendChild(row);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// Connect to SSE
+const es = new EventSource('/events/dns');
+es.addEventListener('open', () => {
+  connEl.className = 'inline-block w-2 h-2 rounded-full bg-tn-green';
+  statusEl.textContent = 'подключено';
+});
+es.onmessage = (e) => appendEntry(JSON.parse(e.data));
+es.onerror = () => {
+  connEl.className = 'inline-block w-2 h-2 rounded-full bg-tn-red';
+  statusEl.textContent = 'отключено';
+};
+</script>
+{% endblock %}

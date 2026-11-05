@@ -1,0 +1,130 @@
+name: ctf-browser-agent
+
+networks:
+  llm-net:
+  public:
+  task06-net:
+    internal: true
+
+volumes:
+  task06-orch-data:
+
+services:
+  task06-marketplace:
+    build:
+      context: ./marketplace
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${SHOP_PORT:-8320}:8020"
+    networks:
+      - public
+      - task06-net
+    environment:
+      ORCH_URL:      http://task06-orchestrator:8022
+      PAYMENT_URL:   http://task06-payment:8021
+      SHARED_SECRET: ${TASK06_SHARED_SECRET:-dev-task06-secret}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8020/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task06-payment:
+    build:
+      context: ./payment-gateway
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task06-net
+    volumes:
+      - task06-orch-data:/data
+    environment:
+      ORCH_URL:      http://task06-orchestrator:8022
+      BUDGET:        ${TASK06_BUDGET:-5000}
+      SHARED_SECRET: ${TASK06_SHARED_SECRET:-dev-task06-secret}
+      PAYMENT_PORT:  "8021"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8021/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task06-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task06-net
+      - llm-net
+    environment:
+      MARKETPLACE_URL:      http://task06-marketplace:8020
+      PAYMENT_URL:          http://task06-payment:8021
+      LLM_BACKEND_URL:      ${LLM_BACKEND_URL:-}
+      LLM_MODEL:            ${LLM_MODEL:-Qwen/Qwen2.5-Coder-32B-Instruct}
+      OPENAI_API_KEY:       ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY:    ${ANTHROPIC_API_KEY:-}
+      GIGACHAT_API_KEY:     ${GIGACHAT_API_KEY:-}
+      GIGACHAT_CREDENTIALS: ${GIGACHAT_CREDENTIALS:-}
+      GIGACHAT_SCOPE:       ${GIGACHAT_SCOPE:-GIGACHAT_API_PERS}
+      GIGACHAT_MODEL:       ${GIGACHAT_MODEL:-GigaChat-Pro}
+    depends_on:
+      task06-marketplace:
+        condition: service_healthy
+      task06-payment:
+        condition: service_healthy
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8023/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  task06-orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task06-net
+    volumes:
+      - task06-orch-data:/data
+    environment:
+      AGENT_URL:       http://task06-agent:8023
+      PAYMENT_URL:     http://task06-payment:8021
+      MARKETPLACE_URL: http://task06-marketplace:8020
+      # orchestrator.py reads MARKET_URL (not MARKETPLACE_URL); without it the
+      # browser agent is sent to 127.0.0.1:8320 inside its own container.
+      MARKET_URL:      http://task06-marketplace:8020
+      FLAG_TASK_06:    ${FLAG_TASK_06:-FLAG{task06_dev}}
+      SHARED_SECRET:   ${TASK06_SHARED_SECRET:-dev-task06-secret}
+      ORCH_DB_PATH:    /data/orchestrator.db
+    depends_on:
+      task06-agent:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8022/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task06-web:
+    build:
+      context: ./portal
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8324}:8000"
+    networks:
+      - public
+      - task06-net
+    environment:
+      ORCH_URL:         http://task06-orchestrator:8022
+      MARKETPLACE_URL:  http://task06-marketplace:8020
+      MARKET_URL:       http://task06-marketplace:8020
+      MARKET_PUBLIC_URL: http://${PUBLIC_HOST:-localhost}:${SHOP_PORT:-8320}
+    depends_on:
+      task06-orchestrator:
+        condition: service_healthy

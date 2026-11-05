@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Каталог MCP — Task 07{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-6">
+  <a href="/" class="text-tn-muted hover:text-tn-blue text-xs transition-colors">← Обзор</a>
+  <span class="text-tn-border">/</span>
+  <h1 class="text-tn-text font-bold">Каталог MCP-серверов</h1>
+</div>
+
+<div class="bg-tn-panel border border-tn-border rounded-lg p-5 mb-6 text-xs text-tn-muted leading-relaxed">
+  MCP-хост агента подключается к каждому серверу по официальному протоколу
+  <span class="text-tn-cyan">MCP Streamable HTTP</span> (JSON-RPC 2.0: <code>initialize</code> →
+  <code>tools/list</code> → <code>tools/call</code>). Описания инструментов из каталога попадают
+  прямо в контекст модели при подключении.
+  <span class="text-tn-muted/70">Эндпоинт коммьюнити-сервера: <code class="text-tn-purple">{{ catalog.endpoint }}</code></span>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+  {% for srv in catalog.builtin %}
+  <div class="bg-tn-panel border border-tn-border rounded-lg p-5 flex flex-col">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-tn-text font-bold text-sm">
+        {% if srv.color == 'red' %}🔐 {% elif srv.color == 'green' %}📁 {% endif %}{{ srv.name }}
+      </span>
+      <span class="text-xs px-2 py-0.5 rounded border {% if srv.color == 'red' %}border-tn-red/40 text-tn-red{% else %}border-tn-green/40 text-tn-green{% endif %}">
+        built-in
+      </span>
+    </div>
+    <p class="text-tn-muted text-xs leading-relaxed flex-1">{{ srv.description }}</p>
+    <div class="mt-3 text-tn-muted/60 text-xs font-mono truncate" title="{{ srv.url }}">{{ srv.url }}</div>
+  </div>
+  {% endfor %}
+
+  {% for sub in catalog.community %}
+  <div class="bg-tn-panel border border-tn-purple/30 rounded-lg p-5 flex flex-col">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-tn-purple font-bold text-sm">🧩 {{ sub.tool_name }}</span>
+      <span class="text-xs px-2 py-0.5 rounded border border-tn-purple/40 text-tn-purple">community</span>
+    </div>
+    <p class="text-tn-muted text-xs leading-relaxed flex-1 break-words">{{ sub.tool_description[:220] }}{% if sub.tool_description|length > 220 %}…{% endif %}</p>
+    <div class="mt-3 flex items-center justify-between text-xs text-tn-muted">
+      <span>команда <span class="text-tn-text">{{ sub.team_id }}</span></span>
+      <span>вызовов: <span class="text-tn-yellow">{{ sub.call_count }}</span></span>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if not catalog.community %}
+  <div class="bg-tn-panel/50 border border-dashed border-tn-border rounded-lg p-5 flex items-center justify-center">
+    <p class="text-tn-muted text-xs text-center">
+      Коммьюнити-инструментов пока нет.<br/>
+      <a href="/tool" class="text-tn-blue hover:text-tn-cyan">Опубликуйте первый →</a>
+    </p>
+  </div>
+  {% endif %}
+</div>
+
+{% if team %}
+<div class="mt-6 bg-tn-panel border border-tn-border rounded-lg p-5">
+  <h2 class="text-tn-text text-sm font-bold mb-2">Ваш инструмент</h2>
+  {% if catalog.community | selectattr('team_id', 'equalto', team.team_id | string) | list %}
+    {% set mine = catalog.community | selectattr('team_id', 'equalto', team.team_id | string) | first %}
+    <div class="text-xs">
+      <span class="text-tn-green font-bold">{{ mine.tool_name }}</span>
+      <span class="text-tn-muted ml-3">MCP-имя: <code class="text-tn-cyan">{{ mine.mcp_name }}</code></span>
+      <span class="text-tn-muted ml-3">вызовов: <span class="text-tn-yellow">{{ mine.call_count }}</span></span>
+    </div>
+  {% else %}
+    <p class="text-tn-muted text-xs">Не опубликован.
+      <a href="/tool" class="text-tn-blue hover:text-tn-cyan">Загрузить →</a></p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

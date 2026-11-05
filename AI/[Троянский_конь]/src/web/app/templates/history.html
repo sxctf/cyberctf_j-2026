@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}История{% endblock %}
+
+{% block content %}
+<h1 class="text-lg font-bold text-tn-text mb-6">История попыток</h1>
+
+{% if not team %}
+<div class="text-tn-muted text-sm">Войдите, чтобы видеть свою историю.</div>
+{% elif not jobs %}
+<div class="border border-tn-border bg-tn-panel rounded-lg p-8 text-center text-tn-muted text-sm">
+  Пока ничего не загружено. <a href="/submit" class="text-tn-blue hover:underline">Загрузить модель.</a>
+</div>
+{% else %}
+<div class="border border-tn-border bg-tn-panel rounded-lg overflow-hidden">
+  <table class="w-full text-xs">
+    <thead>
+      <tr class="border-b border-tn-border text-tn-muted uppercase">
+        <th class="px-4 py-3 text-left">Файл</th>
+        <th class="px-4 py-3 text-left">Размер</th>
+        <th class="px-4 py-3 text-left">Скан</th>
+        <th class="px-4 py-3 text-left">Загрузка</th>
+        <th class="px-4 py-3 text-left">Эксфил</th>
+        <th class="px-4 py-3 text-left">DNS</th>
+        <th class="px-4 py-3 text-left">Время</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in jobs %}
+      <tr class="border-b border-tn-border/50 hover:bg-tn-border/20 cursor-pointer"
+          onclick="toggleDetail('{{ job.id }}')">
+        <td class="px-4 py-3 font-mono truncate max-w-[140px]">{{ job.filename }}</td>
+        <td class="px-4 py-3 text-tn-muted">{{ (job.file_size / 1024) | round(1) }} КБ</td>
+        <td class="px-4 py-3">
+          {% if job.scan_verdict == 'clean' %}
+            <span class="text-tn-green">✓ чисто</span>
+          {% elif job.scan_verdict == 'blocked' %}
+            <span class="text-tn-red">✗ блокировка</span>
+          {% else %}
+            <span class="text-tn-muted">—</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3">
+          {% if job.status == 'done' %}
+            <span class="text-tn-green">готово</span>
+          {% elif job.status == 'scan_blocked' %}
+            <span class="text-tn-muted">—</span>
+          {% elif job.status == 'timeout' %}
+            <span class="text-tn-yellow">таймаут</span>
+          {% else %}
+            <span class="text-tn-muted">{{ job.status }}</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3">
+          {% set exfil = job.exfil_data | default('[]') %}
+          {% if exfil != '[]' and exfil != '' %}
+            <span class="text-tn-green">✓</span>
+          {% else %}
+            <span class="text-tn-muted">—</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3">
+          {% if job.dns_activity %}
+            <span class="text-tn-yellow">✓</span>
+          {% else %}
+            <span class="text-tn-muted">—</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3 text-tn-muted">
+          {{ job.created_at.strftime('%d %b %H:%M') if job.created_at else '—' }}
+        </td>
+      </tr>
+      <!-- Detail row -->
+      <tr id="detail-{{ job.id }}" class="hidden border-b border-tn-border bg-tn-panel/50">
+        <td colspan="7" class="px-4 py-3">
+          {% if job.scan_detail %}
+          <div class="mb-2">
+            <span class="text-xs text-tn-muted">Детали проверки:</span>
+            <pre class="text-xs font-mono text-tn-text mt-1 whitespace-pre-wrap">{{ job.scan_detail }}</pre>
+          </div>
+          {% endif %}
+          {% if job.loader_stdout %}
+          <div class="mb-2">
+            <span class="text-xs text-tn-muted">Вывод (stdout):</span>
+            <pre class="text-xs font-mono text-tn-text mt-1 whitespace-pre-wrap">{{ job.loader_stdout[:1000] }}</pre>
+          </div>
+          {% endif %}
+          {% if job.loader_stderr %}
+          <div>
+            <span class="text-xs text-tn-muted">Ошибки (stderr):</span>
+            <pre class="text-xs font-mono text-tn-red mt-1 whitespace-pre-wrap">{{ job.loader_stderr[:500] }}</pre>
+          </div>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleDetail(id) {
+  const row = document.getElementById('detail-' + id);
+  row.classList.toggle('hidden');
+}
+</script>
+{% endblock %}

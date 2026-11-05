@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Exfil Listener — Task 07{% endblock %}
+
+{% block head %}
+<style>
+  #exfil-stream { max-height: 70vh; overflow-y: auto; scroll-behavior: smooth; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-6">
+  <a href="/" class="text-tn-muted hover:text-tn-blue text-xs transition-colors">← Обзор</a>
+  <span class="text-tn-border">/</span>
+  <h1 class="text-tn-text font-bold">Приёмник эксфильтрации</h1>
+  {% if team %}
+  <span class="text-tn-muted text-xs ml-2">team: <span class="text-tn-purple">{{ team.team_id }}</span></span>
+  {% endif %}
+</div>
+
+{% if team %}
+<div class="bg-tn-panel border border-tn-border rounded-lg p-4 mb-5 text-xs">
+  <span class="text-tn-muted">Ваш эндпоинт эксфильтрации:</span>
+  <code class="text-tn-cyan ml-2">{{ exfil_base }}/exfil/{{ team.team_id }}/&lt;path&gt;</code>
+  <span class="text-tn-muted ml-2">— любой метод, любой путь с этим префиксом логируется</span>
+</div>
+{% endif %}
+
+<div class="bg-tn-panel border border-tn-border rounded-lg p-5">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-tn-text text-sm font-bold">Входящие запросы</h2>
+    <div class="flex items-center gap-3">
+      <span id="live-dot" class="text-tn-yellow text-xs animate-pulse">● LIVE</span>
+      <span class="text-tn-muted text-xs" id="entry-count">{{ logs | length }} записей</span>
+    </div>
+  </div>
+
+  <div id="exfil-stream" class="font-mono text-xs space-y-2">
+    {% for entry in logs %}
+    <div class="border border-tn-border/50 rounded p-3
+                {% if entry.flags_found %}bg-green-900/20 border-green-700/40{% else %}bg-tn-bg{% endif %}">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-tn-muted">{{ entry.ts[:19] }}</span>
+        <span class="{% if entry.flags_found %}text-tn-green font-bold{% else %}text-tn-muted{% endif %}">
+          {{ entry.method }} {{ entry.path }}
+        </span>
+      </div>
+      {% if entry.flags_found %}
+        <div class="mt-2 space-y-1">
+          {% for f in entry.flags_found %}
+          <div class="text-tn-green font-bold">{{ f }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% if entry.query %}
+        <div class="mt-1 text-tn-yellow">query: {{ entry.query | tojson }}</div>
+      {% endif %}
+      {% if entry.body %}
+        <div class="mt-1 text-tn-text opacity-70">{{ entry.body[:200] }}{% if entry.body | length > 200 %}…{% endif %}</div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div id="empty-msg" class="text-tn-muted text-center py-10">
+      Запросов пока нет. Запустите агента с вашим инструментом для начала захвата данных.
+    </div>
+    {% endfor %}
+    <div id="stream-end"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if team %}
+<script>
+(function() {
+  const container = document.getElementById('exfil-stream');
+  const countEl   = document.getElementById('entry-count');
+  const liveDot   = document.getElementById('live-dot');
+  let count = {{ logs | length }};
+
+  const es = new EventSource('/events/exfil/{{ team.team_id }}');
+
+  es.onmessage = function(e) {
+    const entry = JSON.parse(e.data);
+    const empty = document.getElementById('empty-msg');
+    if (empty) empty.remove();
+
+    count++;
+    countEl.textContent = count + ' записей';
+
+    const hasFlag = entry.flags_found && entry.flags_found.length > 0;
+    const div = document.createElement('div');
+    div.className = `border border-tn-border/50 rounded p-3 ${hasFlag ? 'bg-green-900/20 border-green-700/40' : 'bg-tn-bg'}`;
+
+    let html = `<div class="flex items-center justify-between mb-1">
+      <span class="text-tn-muted">${entry.ts.slice(0,19)}</span>
+      <span class="${hasFlag ? 'text-tn-green font-bold' : 'text-tn-muted'}">${entry.method} ${entry.path}</span>
+    </div>`;
+
+    if (hasFlag) {
+      html += entry.flags_found.map(f => `<div class="text-tn-green font-bold mt-1">${f}</div>`).join('');
+      if (!document.title.startsWith('✓')) document.title = '✓ FLAG CAPTURED — ' + document.title;
+    }
+    if (entry.body) {
+      html += `<div class="mt-1 text-tn-text opacity-70">${entry.body.slice(0,200)}</div>`;
+    }
+    div.innerHTML = html;
+
+    const end = document.getElementById('stream-end');
+    container.insertBefore(div, end);
+    container.scrollTop = container.scrollHeight;
+  };
+
+  es.onerror = function() {
+    liveDot.textContent = '● ОТКЛЮЧЕНО';
+    liveDot.classList.remove('animate-pulse','text-tn-yellow');
+    liveDot.classList.add('text-tn-red');
+  };
+})();
+</script>
+{% endif %}
+{% endblock %}

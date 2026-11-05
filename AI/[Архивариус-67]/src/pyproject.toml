@@ -1,0 +1,16 @@
+[project]
+name = "peer-review-guardrail-challenge"
+version = "0.1.0"
+description = "Single-level CTF challenge about academic peer review guardrail bypass."
+requires-python = ">=3.13"
+dependencies = [
+    "python-dotenv>=1.1.1",
+    "flask>=3.0.0",
+    "gigachat>=0.1.42.post2",
+    "gunicorn>=23.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

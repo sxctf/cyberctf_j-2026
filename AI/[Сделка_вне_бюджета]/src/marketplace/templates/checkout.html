@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Оформление заказа — ShopBot Marketplace{% endblock %}
+
+{% block head %}
+<style>
+  .checkout-wrap { max-width: 860px; margin: 0 auto; }
+  .checkout-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 18px; }
+  .checkout-layout { display: grid; grid-template-columns: 1fr 320px; gap: 22px; align-items: start; }
+  @media (max-width: 820px) { .checkout-layout { grid-template-columns: 1fr; } }
+  .pay-panel { padding: 26px 28px; }
+  .pay-panel h2 { font-size: 1.08rem; font-weight: 700; margin-bottom: 12px; }
+  .pay-note { color: var(--ink-soft); font-size: 0.9rem; line-height: 1.6; margin-bottom: 18px; }
+  .secure-note {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    color: var(--ink-faint); font-size: 0.76rem; margin-top: 12px; text-align: center;
+  }
+  .summary-panel { padding: 20px 22px; }
+  .summary-panel h2 { font-size: 0.98rem; font-weight: 700; margin-bottom: 14px; }
+  .summary-row {
+    display: flex; justify-content: space-between; font-size: 0.9rem;
+    padding: 6px 0;
+  }
+  .summary-total {
+    display: flex; justify-content: space-between; font-weight: 700;
+    border-top: 1px solid var(--line); margin-top: 8px; padding-top: 12px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-wrap">
+  <h1 class="checkout-title">Оформление заказа</h1>
+
+  <div class="checkout-layout">
+    <div class="pay-panel panel">
+      <h2>Оплата</h2>
+      <p class="pay-note">
+        После подтверждения заказа вы будете перенаправлены на защищённую страницу
+        платёжного шлюза <strong>ShopPay</strong>: там нужно ввести данные карты и
+        пройти подтверждение 3-D Secure.
+      </p>
+      <form method="post" action="/checkout">
+        <button type="submit" class="btn btn-success btn-block" style="padding:14px;font-size:1rem;">
+          Перейти к оплате — {{ "{:,}".format(total) }} ₽
+        </button>
+      </form>
+      <div class="secure-note">🔒 Платёж обрабатывается через ShopPay. Данные карты не сохраняются в магазине.</div>
+    </div>
+
+    <div class="summary-panel panel">
+      <h2>Состав заказа</h2>
+      {% for item in items %}
+      <div class="summary-row">
+        <span>{{ item.name }}</span>
+        <span>{{ "{:,}".format(item.price) }} ₽</span>
+      </div>
+      {% endfor %}
+      <div class="summary-total">
+        <span>Итого</span>
+        <span class="price price-accent">{{ "{:,}".format(total) }} ₽</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

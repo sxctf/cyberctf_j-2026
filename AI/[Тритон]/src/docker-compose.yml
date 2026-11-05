@@ -1,0 +1,72 @@
+name: ctf-triton
+
+networks:
+  public:
+  task10-net:
+    internal: true
+
+volumes:
+  task10-data:
+
+services:
+  task10-backend:
+    image: ctf-triton:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task10-net
+    environment:
+      FLAG:           ${FLAG_TASK_10:-FLAG{task10_dev}}
+      TRITON_DB_PATH: /data/triton_challenge.sqlite3
+    volumes:
+      - task10-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # Same image as the backend, started as the public gateway
+  task10-web:
+    image: ctf-triton:local
+    pull_policy: never
+    command: ["python", "scripts/reverse_proxy.py"]
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8402}:8000"
+    networks:
+      - public
+      - task10-net
+    environment:
+      UPSTREAM_BASE_URL: http://task10-backend:8000
+      GATEWAY_PORT:      "8000"
+    depends_on:
+      task10-backend:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s

@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block title %}Vendor Studio — Task 06{% endblock %}
+
+{% block head %}
+<!-- Monaco Editor CDN -->
+<script src="/vendor/monaco/vs/loader.js"></script>
+<style>
+  .studio-layout { display: grid; grid-template-columns: 260px 1fr 340px; gap: 0; height: calc(100vh - 7rem); }
+  .studio-panel { background: #11151c; border: 1px solid #1e2530; border-radius: 8px; overflow: hidden; }
+  .editor-container { display: flex; flex-direction: column; }
+  .editor-tabs { display: flex; border-bottom: 1px solid #1e2530; }
+  .editor-tab { padding: 8px 16px; font-size: 0.75rem; cursor: pointer; color: #565f89; border-right: 1px solid #1e2530; transition: all 0.15s; }
+  .editor-tab.active { color: #e0af68; background: #0a0e14; }
+  .editor-tab:hover:not(.active) { color: #c0caf5; }
+  #monaco-container { flex: 1; min-height: 0; }
+  .preview-panel { display: flex; flex-direction: column; }
+  .preview-frame { flex: 1; border: none; background: white; }
+  .settings-scroll { overflow-y: auto; height: 100%; padding: 16px; }
+  .field-label { font-size: 0.7rem; color: #565f89; margin-bottom: 4px; display: block; }
+  .field-input { width: 100%; background: #0a0e14; border: 1px solid #1e2530; border-radius: 4px; padding: 8px; font-size: 0.75rem; color: #c0caf5; font-family: ui-monospace, Consolas, monospace; }
+  .field-input:focus { outline: none; border-color: #e0af68; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-4">
+  <a href="/" class="text-tn-muted hover:text-tn-blue text-xs transition-colors">← Обзор</a>
+  <span class="text-tn-border">/</span>
+  <h1 class="text-tn-text font-bold text-sm">Студия вендора</h1>
+  {% if saved %}<span class="text-tn-green text-xs ml-2">✓ Сохранено</span>{% endif %}
+  {% if error %}<span class="text-tn-red text-xs ml-2">✗ Ошибка сохранения</span>{% endif %}
+</div>
+
+<div class="studio-layout">
+
+  <!-- LEFT: Vendor Settings -->
+  <div class="studio-panel mr-1">
+    <div class="settings-scroll">
+      <div class="text-tn-yellow text-xs font-bold mb-4 uppercase tracking-wider">Настройки вендора</div>
+
+      <div class="mb-4">
+        <label class="field-label">Название магазина</label>
+        <input type="text" id="shop-name" class="field-input"
+               value="{{ vendor.shop_name if vendor else 'Мой аудиомагазин' }}"
+               placeholder="Мой аудиомагазин"/>
+      </div>
+
+      <div class="mb-4">
+        <label class="field-label">Название товара</label>
+        <input type="text" id="product-name" class="field-input"
+               value="{{ vendor.product_name if vendor else 'USB-микрофон Pro' }}"
+               placeholder="USB-микрофон Pro"/>
+      </div>
+
+      <div class="mb-4">
+        <label class="field-label">Цена (фиксированная)</label>
+        <div class="field-input text-tn-red font-bold">49,999 ₽</div>
+      </div>
+
+      <div class="mb-4">
+        <label class="field-label">
+          Отзывы <span class="text-tn-yellow">(также вектор инъекции)</span>
+        </label>
+        <div id="reviews-list" class="space-y-2 mb-2">
+          <!-- Populated by JS -->
+        </div>
+        <button onclick="addReview()"
+                class="text-xs border border-tn-border text-tn-muted px-3 py-1.5 rounded hover:text-tn-text hover:border-tn-blue/40 transition-colors w-full">
+          + Добавить отзыв
+        </button>
+      </div>
+
+      <div class="border-t border-tn-border pt-4 mt-4">
+        <button onclick="saveVendor()"
+                class="w-full bg-tn-yellow/10 border border-tn-yellow/50 text-tn-yellow px-4 py-2.5 rounded text-xs font-bold hover:bg-tn-yellow/20 transition-colors">
+          Опубликовать на маркетплейсе
+        </button>
+        <p class="text-tn-muted text-xs mt-2 text-center">
+          <a href="/marketplace-preview" target="_blank" class="hover:text-tn-blue">Предпросмотр на маркетплейсе →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: Monaco Editor -->
+  <div class="studio-panel editor-container mx-1">
+    <div class="editor-tabs">
+      <div class="editor-tab active" onclick="switchTab('html')" id="tab-html">product.html</div>
+      <div class="editor-tab" onclick="switchTab('css')" id="tab-css">product.css</div>
+      <div class="editor-tab" onclick="switchTab('js')" id="tab-js">product.js</div>
+      <div class="ml-auto flex items-center pr-3">
+        <button onclick="updatePreview()"
+                class="text-xs text-tn-muted hover:text-tn-yellow px-2 py-1 transition-colors">
+          ↻ Обновить превью
+        </button>
+      </div>
+    </div>
+    <div id="monaco-container"></div>
+  </div>
+
+  <!-- RIGHT: Live Preview -->
+  <div class="studio-panel preview-panel ml-1">
+    <div class="flex items-center justify-between px-3 py-2 border-b border-tn-border">
+      <span class="text-tn-muted text-xs">Живой превью</span>
+      <span class="text-tn-muted text-xs" id="preview-url">— не опубликовано —</span>
+    </div>
+    <iframe id="preview-frame" class="preview-frame"
+            srcdoc="<html><body style='background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100%;font-family:Arial;color:#888;'><p>Нажмите ↻ Обновить превью</p></body></html>">
+    </iframe>
+  </div>
+</div>
+
+<!-- Hidden form for submission -->
+<form id="save-form" method="post" action="/studio" style="display:none">
+  <input type="hidden" name="shop_name" id="f-shop"/>
+  <input type="hidden" name="product_name" id="f-product"/>
+  <input type="hidden" name="product_html" id="f-html"/>
+  <input type="hidden" name="product_css" id="f-css"/>
+  <input type="hidden" name="product_js" id="f-js"/>
+  <input type="hidden" name="reviews_json" id="f-reviews"/>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const INITIAL = {
+  html: `{{ (vendor.product_html if vendor else '') | replace('\\', '\\\\') | replace('`', '\\`') | replace('${', '$\\{') }}`,
+  css:  `{{ (vendor.product_css  if vendor else '') | replace('\\', '\\\\') | replace('`', '\\`') | replace('${', '$\\{') }}`,
+  js:   `{{ (vendor.product_js   if vendor else '') | replace('\\', '\\\\') | replace('`', '\\`') | replace('${', '$\\{') }}`,
+};
+const VENDOR_SLUG = {{ ('"' + vendor.slug + '"') | safe if vendor else 'null' }};
+const MARKET_URL  = "{{ market_url }}";
+
+let editors = {};
+let currentTab = 'html';
+let reviewCount = 0;
+let existingReviews = [];
+
+try {
+  existingReviews = JSON.parse(`{{ (vendor.reviews if vendor else '[]') | safe }}`);
+} catch(e) { existingReviews = []; }
+
+require.config({ paths: { vs: '/vendor/monaco/vs' } });
+require(['vs/editor/editor.main'], function() {
+  const container = document.getElementById('monaco-container');
+
+  ['html', 'css', 'js'].forEach(lang => {
+    const langMap = {html:'html', css:'css', js:'javascript'};
+    const wrapper = document.createElement('div');
+    wrapper.id = `editor-wrapper-${lang}`;
+    wrapper.style.cssText = 'height:100%;width:100%;display:none;';
+    container.appendChild(wrapper);
+    editors[lang] = monaco.editor.create(wrapper, {
+      value: INITIAL[lang] || getDefaultContent(lang),
+      language: langMap[lang],
+      theme: 'vs-dark',
+      minimap: { enabled: false },
+      fontSize: 12,
+      lineHeight: 18,
+      fontFamily: '"JetBrains Mono", monospace',
+      automaticLayout: true,
+      scrollBeyondLastLine: false,
+      wordWrap: 'on',
+    });
+  });
+
+  // Show HTML editor by default
+  showEditor('html');
+
+  // Auto-load preview
+  {% if saved and vendor %}
+  // After deploy: show actual marketplace page
+  const frame = document.getElementById('preview-frame');
+  const previewUrl = MARKET_URL + '/products/' + VENDOR_SLUG;
+  frame.src = previewUrl;
+  document.getElementById('preview-url').textContent = previewUrl;
+  {% else %}
+  updatePreview();
+  {% endif %}
+});
+
+function getDefaultContent(lang) {
+  if (lang === 'html') return `<div class="product-info">
+  <h2>Professional USB Microphone</h2>
+  <p>Crystal clear audio for your recordings.</p>
+
+  <!-- Your injection goes here -->
+</div>`;
+  if (lang === 'css') return `/* Custom styles for your product page */
+.product-info { padding: 1rem; }`;
+  return `// Custom JavaScript
+// document.querySelector('.product-info')...`;
+}
+
+function showEditor(lang) {
+  ['html','css','js'].forEach(l => {
+    const w = document.getElementById(`editor-wrapper-${l}`);
+    if (w) w.style.display = l === lang ? '' : 'none';
+  });
+  if (editors[lang]) editors[lang].layout();
+}
+
+function switchTab(lang) {
+  currentTab = lang;
+  ['html','css','js'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === lang);
+  });
+  showEditor(lang);
+}
+
+function getReviews() {
+  const reviews = [];
+  document.querySelectorAll('.review-row').forEach(row => {
+    const author = row.querySelector('.r-author')?.value || 'Customer';
+    const rating = parseInt(row.querySelector('.r-rating')?.value) || 5;
+    const text   = row.querySelector('.r-text')?.value || '';
+    reviews.push({ author, rating, text });
+  });
+  return reviews;
+}
+
+function addReview(author='', rating=5, text='') {
+  const container = document.getElementById('reviews-list');
+  const div = document.createElement('div');
+  div.className = 'review-row space-y-1 bg-tn-bg border border-tn-border/50 rounded p-2';
+  div.innerHTML = `
+    <div class="flex gap-1">
+      <input class="r-author field-input flex-1" placeholder="Автор" value="${author}"/>
+      <select class="r-rating field-input w-16">
+        ${[5,4,3,2,1].map(n=>`<option${n==rating?' selected':''}>${n}</option>`).join('')}
+      </select>
+    </div>
+    <input class="r-text field-input" placeholder="Текст отзыва (вектор инъекции)" value="${text}"/>
+  `;
+  container.appendChild(div);
+}
+
+// Initialize existing reviews
+existingReviews.forEach(r => addReview(r.author||'', r.rating||5, r.text||''));
+if (!existingReviews.length) addReview('Довольный покупатель', 5, 'Отличный микрофон, очень рекомендую!');
+
+function saveVendor() {
+  const form = document.getElementById('save-form');
+  document.getElementById('f-shop').value    = document.getElementById('shop-name').value;
+  document.getElementById('f-product').value = document.getElementById('product-name').value;
+  document.getElementById('f-html').value    = editors.html?.getValue() || '';
+  document.getElementById('f-css').value     = editors.css?.getValue()  || '';
+  document.getElementById('f-js').value      = editors.js?.getValue()   || '';
+  document.getElementById('f-reviews').value = JSON.stringify(getReviews());
+  form.submit();
+}
+
+function updatePreview() {
+  const html = editors.html?.getValue() || '';
+  const css  = editors.css?.getValue()  || '';
+  const js   = editors.js?.getValue()   || '';
+  const shopName = document.getElementById('shop-name').value;
+  const productName = document.getElementById('product-name').value;
+  const reviewsHtml = getReviews().map(r =>
+    `<div style="border-bottom:1px solid #eee;padding:8px 0;">
+      <b>${r.author}</b> ${'★'.repeat(r.rating)}
+      <p>${r.text}</p>
+    </div>`
+  ).join('');
+
+  const doc = `<!DOCTYPE html>
+<html><head>
+<style>
+body{font-family:Arial,sans-serif;padding:16px;background:#f5f5f5;}
+.buy-box{background:white;border:1px solid #ddd;border-radius:8px;padding:16px;max-width:300px;}
+.price{color:#c62828;font-size:1.4rem;font-weight:bold;}
+${css}
+</style></head><body>
+<p style="font-size:0.75rem;color:#888;">Sold by: <b>${shopName}</b></p>
+<h2>${productName}</h2>
+<div class="vendor-content">${html}</div>
+<div class="buy-box" style="margin:16px 0;">
+  <p class="price">49,999 ₽</p>
+  <button style="background:#1a73e8;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;width:100%;">Add to Cart</button>
+</div>
+<h3>Reviews</h3>
+${reviewsHtml}
+<script>${js}<\/script>
+</body></html>`;
+
+  document.getElementById('preview-frame').srcdoc = doc;
+}
+</script>
+{% endblock %}

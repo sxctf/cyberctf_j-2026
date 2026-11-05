@@ -1,0 +1,71 @@
+name: ctf-trojan-horse
+
+networks:
+  public:
+  task03-net:
+    internal: true
+
+volumes:
+  task03-db:
+  task03-exfil:
+  task03-uploads:
+
+services:
+  task03-dns:
+    build:
+      context: ./dns-logger
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task03-net
+
+  task03-sandbox:
+    build:
+      context: ./sandbox
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task03-net
+    volumes:
+      - task03-exfil:/exfil
+    environment:
+      FLAG_TASK_03: ${FLAG_TASK_03:-FLAG{task03_dev}}
+    # Create /tmp/flag.txt from env var at startup (/ is read-only)
+    command: >
+      sh -c "echo \"$$FLAG_TASK_03\" > /tmp/flag.txt && chmod 400 /tmp/flag.txt && python sandbox.py"
+    # Hardened: no capabilities, read-only root (except /tmp and /exfil)
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task03-web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8100}:8000"
+    networks:
+      - public
+      - task03-net
+    volumes:
+      - task03-uploads:/uploads
+      - task03-db:/data
+      - task03-exfil:/exfil:ro
+    environment:
+      SANDBOX_URL:      http://task03-sandbox:8002
+      DNS_LOGGER_URL:   http://task03-dns:8053
+      UPLOAD_DIR:       /uploads
+      TASK03_DB_PATH:   /data/task03.db
+    depends_on:
+      task03-sandbox:
+        condition: service_healthy
+      task03-dns:
+        condition: service_started

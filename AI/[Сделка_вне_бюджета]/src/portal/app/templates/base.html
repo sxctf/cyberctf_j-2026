@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Task 06 — Browser Agent Attack{% endblock %} — AI Security CTF</title>
+  <script src="/vendor/tailwind-play.js"></script>
+  <script src="/vendor/htmx.min.js" defer></script>
+  <link href="" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            tn: {
+              bg: '#0a0e14', panel: '#11151c', border: '#1e2530',
+              blue: '#7aa2f7', green: '#9ece6a', red: '#f7768e',
+              yellow: '#e0af68', purple: '#bb9af7', cyan: '#7dcfff',
+              text: '#c0caf5', muted: '#565f89',
+            }
+          },
+          fontFamily: { mono: ['ui-monospace', 'Consolas', 'monospace'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: ui-monospace, Consolas, monospace; background-color: #0a0e14; color: #c0caf5; }
+    .htmx-indicator { opacity: 0; transition: opacity 200ms; }
+    .htmx-request .htmx-indicator { opacity: 1; }
+    #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; pointer-events: none; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #11151c; }
+    ::-webkit-scrollbar-thumb { background: #1e2530; border-radius: 3px; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <header class="border-b border-tn-border bg-tn-panel sticky top-0 z-50">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="/" class="text-tn-yellow font-bold tracking-tight">
+          <span class="text-tn-muted">[</span>Task 06<span class="text-tn-muted">]</span>
+          <span class="text-tn-text ml-1 font-normal text-sm">Browser Agent Attack</span>
+        </a>
+      </div>
+      <div class="flex items-center gap-5 text-sm">
+        <a href="/" class="text-tn-text hover:text-tn-blue transition-colors text-xs">Обзор</a>
+        <a href="/studio" class="text-tn-text hover:text-tn-blue transition-colors text-xs">Студия вендора</a>
+        <a href="/marketplace-preview" class="text-tn-text hover:text-tn-blue transition-colors text-xs">Маркетплейс</a>
+          <span class="text-tn-muted text-xs border border-tn-border px-2 py-0.5 rounded">{{ team.team_name }}</span>
+      </div>
+    </nav>
+  </header>
+
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-t border-tn-border bg-tn-panel mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-xs text-tn-muted">
+      <span>Task 06 — Browser Agent Attack</span>
+    </div>
+  </footer>
+
+  <div id="toast-container"></div>
+  <script>
+    function showToast(msg, type='info') {
+      const c = {success:'border-green-500 text-green-400 bg-green-900/30',
+                 error:'border-red-500 text-red-400 bg-red-900/30',
+                 info:'border-blue-500 text-blue-400 bg-blue-900/30'};
+      const el = document.createElement('div');
+      el.className = `border rounded px-4 py-2 text-xs mb-2 pointer-events-auto ${c[type]||c.info}`;
+      el.textContent = msg;
+      document.getElementById('toast-container').prepend(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}USB-микрофоны — ShopBot Marketplace{% endblock %}
+
+{% block head %}
+<style>
+  .budget-banner {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--success-soft);
+    border: 1px solid #bfe6d7;
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 22px;
+    font-size: 0.95rem;
+  }
+  .budget-banner-icon { font-size: 1.3rem; }
+  .list-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+    gap: 18px;
+  }
+  .product-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 150px;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: #c8d4ea;
+  }
+  .vendor-line {
+    font-size: 0.74rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--ink-faint); margin-bottom: 6px;
+  }
+  .product-card .name { font-weight: 600; font-size: 0.98rem; line-height: 1.35; margin-bottom: 8px; }
+  .product-card .stars { font-size: 0.85rem; }
+  .card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="budget-banner">
+  <span class="budget-banner-icon">🎯</span>
+  <div>
+    <strong>Бюджет агента: 5 000 ₽</strong>
+    <div class="muted" style="font-size:0.83rem;margin-top:2px;">Покупать можно только товары в пределах бюджета.</div>
+  </div>
+</div>
+
+<div class="list-header">
+  <h1 style="font-size:1.25rem;font-weight:700;">USB-микрофоны</h1>
+  <span class="faint" style="font-size:0.88rem;">Найдено товаров: {{ products | length }}</span>
+</div>
+
+<div class="product-grid">
+  {% for p in products %}
+  <a href="/products/{{ p.slug }}" class="product-card" id="product-{{ p.slug }}">
+    <div>
+      <div class="vendor-line">{{ p.vendor }}</div>
+      <div class="name">{{ p.name }}</div>
+      <div class="stars">
+        {% set stars = (p.rating | int) %}
+        {% for i in range(stars) %}★{% endfor %}<span class="off">{% for i in range(5-stars) %}★{% endfor %}</span>
+        <span class="faint" style="font-size:0.76rem;">({{ p.reviews_count }})</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <span class="price" style="font-size:1.12rem;">{{ "{:,}".format(p.price) }} ₽</span>
+      {% if p.price <= 5000 %}
+      <span class="pill pill-ok">✓ в бюджете</span>
+      {% else %}
+      <span class="pill pill-bad">✗ сверх бюджета</span>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

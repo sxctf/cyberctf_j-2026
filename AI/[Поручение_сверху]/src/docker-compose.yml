@@ -1,0 +1,156 @@
+name: ctf-code-agent
+
+networks:
+  llm-net:
+  public:
+  task05-net:
+    internal: true
+
+volumes:
+  task05-agent-workspace:
+  task05-gitea-data:
+  task05-webhook-db:
+
+services:
+  task05-gitea:
+    image: gitea/gitea:1.22
+    restart: unless-stopped
+    ports:
+      - "${GITEA_PORT:-8202}:3000"
+    networks:
+      - public
+      - task05-net
+    volumes:
+      - task05-gitea-data:/data
+    environment:
+      GITEA__database__DB_TYPE: sqlite3
+      GITEA__database__PATH: /data/gitea/gitea.db
+      GITEA__server__DOMAIN: task05-gitea
+      GITEA__server__HTTP_PORT: "3000"
+      GITEA__server__ROOT_URL: http://${PUBLIC_HOST:-localhost}:${GITEA_PORT:-8202}/
+      GITEA__security__INSTALL_LOCK: "true"
+      GITEA__security__SECRET_KEY: "ctf-gitea-secret-key-change-me"
+      GITEA__service__DISABLE_REGISTRATION: "false"
+      GITEA__log__LEVEL: Warn
+      GITEA__webhook__ALLOWED_HOST_LIST: "*"
+      # Create admin on first run
+      GITEA__security__INTERNAL_TOKEN: "ctf-internal-token"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  task05-gitea-admin-init:
+    image: gitea/gitea:1.22
+    restart: "no"
+    # Gitea refuses to run its CLI as root ("Gitea is not supposed to be run as
+    # root"), so the admin bootstrap must use the image's `git` user.
+    user: "1000:1000"
+    networks:
+      - task05-net
+    depends_on:
+      task05-gitea:
+        condition: service_healthy
+    volumes:
+      - task05-gitea-data:/data
+    environment:
+      GITEA_WORK_DIR: /data
+      GITEA_URL: http://task05-gitea:3000
+      GITEA_ADMIN_USER: ${GITEA_ADMIN_USER:-ctfadmin}
+      GITEA_ADMIN_PASS: ${GITEA_ADMIN_PASS:-ctfadmin123!}
+    command: >
+      sh -c "gitea admin user create --username $$GITEA_ADMIN_USER --password $$GITEA_ADMIN_PASS --email admin@ctf.local --admin --must-change-password=false --config /data/gitea/conf/app.ini || true"
+
+  task05-gitea-init:
+    build:
+      context: ./gitea-init
+      dockerfile: Dockerfile
+    restart: "no"
+    networks:
+      - task05-net
+    depends_on:
+      task05-gitea:
+        condition: service_healthy
+      task05-gitea-admin-init:
+        condition: service_completed_successfully
+      task05-webhook:
+        condition: service_started
+    environment:
+      GITEA_URL:         http://task05-gitea:3000
+      GITEA_ADMIN_USER:  ${GITEA_ADMIN_USER:-ctfadmin}
+      GITEA_ADMIN_PASS:  ${GITEA_ADMIN_PASS:-ctfadmin123!}
+      GITEA_BOT_USER:    autofix-bot
+      GITEA_BOT_PASS:    botpass456!
+      FLAG_TASK_05:      ${FLAG_TASK_05:-FLAG{task05_dev}}
+      WEBHOOK_URL:       http://task05-webhook:8000/webhook
+      WEBHOOK_SECRET:    ${WEBHOOK_SECRET:-ctf-webhook-secret}
+
+  task05-webhook:
+    build:
+      context: ./webhook
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task05-net
+    volumes:
+      - task05-webhook-db:/data
+    environment:
+      WEBHOOK_DB_PATH: /data/webhook.db
+      WEBHOOK_SECRET:  ${WEBHOOK_SECRET:-ctf-webhook-secret}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task05-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - task05-net
+      - llm-net
+    volumes:
+      - task05-agent-workspace:/workspace
+    environment:
+      WEBHOOK_URL:          http://task05-webhook:8000
+      GITEA_URL:            http://task05-gitea:3000
+      GITEA_BOT_USER:       autofix-bot
+      GITEA_BOT_PASS:       botpass456!
+      GITEA_BOT_TOKEN:      ${GITEA_BOT_TOKEN:-}
+      LLM_BACKEND_URL:      ${LLM_BACKEND_URL:-}
+      LLM_MODEL:            ${LLM_MODEL:-Qwen/Qwen2.5-Coder-32B-Instruct}
+      OPENAI_API_KEY:       ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY:    ${ANTHROPIC_API_KEY:-}
+      GIGACHAT_API_KEY:     ${GIGACHAT_API_KEY:-}
+      GIGACHAT_CREDENTIALS: ${GIGACHAT_CREDENTIALS:-}
+      GIGACHAT_SCOPE:       ${GIGACHAT_SCOPE:-GIGACHAT_API_PERS}
+      GIGACHAT_MODEL:       ${GIGACHAT_MODEL:-GigaChat-Pro}
+    depends_on:
+      task05-webhook:
+        condition: service_healthy
+    # Isolated: agent can only reach Gitea and LLM (via task05-net / agent-net)
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+  task05-web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8201}:8000"
+    networks:
+      - public
+      - task05-net
+    environment:
+      WEBHOOK_URL:      http://task05-webhook:8000
+      GITEA_URL:        http://task05-gitea:3000
+      GITEA_PUBLIC_URL: http://${PUBLIC_HOST:-localhost}:${GITEA_PORT:-8202}
+      GITEA_ADMIN_USER: ${GITEA_ADMIN_USER:-ctfadmin}
+      GITEA_ADMIN_PASS: ${GITEA_ADMIN_PASS:-ctfadmin123!}
+    depends_on:
+      task05-webhook:
+        condition: service_healthy

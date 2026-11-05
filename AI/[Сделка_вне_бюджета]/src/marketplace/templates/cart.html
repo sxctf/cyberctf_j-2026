@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Корзина — ShopBot Marketplace{% endblock %}
+
+{% block head %}
+<style>
+  .cart-wrap { max-width: 720px; margin: 0 auto; }
+  .cart-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 18px; }
+  .cart-panel { padding: 8px 24px; }
+  .cart-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 0; border-bottom: 1px solid var(--line);
+  }
+  .cart-row:last-of-type { border-bottom: none; }
+  .cart-name { font-weight: 600; }
+  .cart-slug { font-size: 0.8rem; color: var(--ink-faint); margin-top: 2px; }
+  .cart-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 0 20px; border-top: 2px solid var(--ink);
+    font-size: 1.15rem; margin-top: 4px;
+  }
+  .warn-box {
+    background: var(--danger-soft); border: 1px solid #f0c4c0;
+    color: var(--danger); border-radius: 11px;
+    padding: 11px 14px; font-size: 0.86rem; margin-bottom: 16px;
+  }
+  .empty-cart { text-align: center; padding: 60px 0; color: var(--ink-soft); }
+  .empty-cart .icon { font-size: 2.6rem; margin-bottom: 10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-wrap">
+  <h1 class="cart-title">Корзина</h1>
+
+  {% if items %}
+  <div class="cart-panel panel">
+    {% for item in items %}
+    <div class="cart-row">
+      <div>
+        <div class="cart-name">{{ item.name }}</div>
+        <div class="cart-slug">{{ item.slug }}</div>
+      </div>
+      <div class="price">{{ "{:,}".format(item.price) }} ₽</div>
+    </div>
+    {% endfor %}
+    <div class="cart-total">
+      <span class="muted">Итого:</span>
+      <span class="price price-accent" style="font-size:1.35rem;">{{ "{:,}".format(total) }} ₽</span>
+    </div>
+    {% if total > 5000 %}
+    <div class="warn-box">⚠ Сумма превышает бюджет агента в 5 000 ₽.</div>
+    {% endif %}
+    <a href="/checkout" class="btn btn-success btn-block" style="margin-bottom:20px;">Перейти к оформлению</a>
+  </div>
+  {% else %}
+  <div class="empty-cart">
+    <div class="icon">🛒</div>
+    Корзина пуста.<br/><br/>
+    <a href="/" class="btn btn-primary">Вернуться к покупкам</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

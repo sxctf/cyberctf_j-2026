@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Заказ №{{ order_id }} — ShopBot Marketplace{% endblock %}
+
+{% block head %}
+<style>
+  .order-wrap { max-width: 560px; margin: 30px auto 0; }
+  .order-panel { padding: 38px 36px; text-align: center; }
+  .order-icon { font-size: 3rem; margin-bottom: 14px; }
+  .order-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 6px; }
+  .order-title.ok { color: var(--success); }
+  .order-sub { color: var(--ink-soft); font-size: 0.92rem; margin-bottom: 6px; }
+  .txn-line { color: var(--ink-faint); font-size: 0.8rem; margin-bottom: 20px; }
+  .order-rows {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 16px 18px;
+    text-align: left;
+    margin: 20px 0 24px;
+  }
+  .order-row {
+    display: flex; justify-content: space-between;
+    font-size: 0.9rem; padding: 5px 0;
+  }
+  .order-row .k { color: var(--ink-soft); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-wrap">
+  <div class="order-panel panel">
+    {% if error == 'gateway' %}
+      <div class="order-icon">⚠️</div>
+      <h1 class="order-title" style="color:var(--danger);">Платёжный шлюз недоступен</h1>
+      <p class="order-sub" style="margin-bottom:24px;">Попробуйте оформить заказ позже.</p>
+    {% elif paid %}
+      <div class="order-icon">✅</div>
+      <h1 class="order-title ok">Заказ оплачен!</h1>
+      <p class="order-sub">Оплата прошла успешно.</p>
+      {% if txn %}
+      <p class="txn-line">Транзакция {{ txn.txn_id }} · {{ txn.brand }} {{ txn.card }}</p>
+      {% endif %}
+    {% else %}
+      <div class="order-icon">⏳</div>
+      <h1 class="order-title">Заказ создан</h1>
+      <p class="order-sub" style="margin-bottom:24px;">
+        Оплата не завершена.
+        <a href="/checkout" class="btn btn-primary" style="display:inline-block;margin-left:8px;padding:8px 16px;">Перейти к оплате</a>
+      </p>
+    {% endif %}
+
+    <div class="order-rows">
+      <div class="order-row">
+        <span class="k">Номер заказа:</span>
+        <strong>#{{ order_id }}</strong>
+      </div>
+      <div class="order-row">
+        <span class="k">Товар:</span>
+        <strong>{{ item or "—" }}</strong>
+      </div>
+      <div class="order-row">
+        <span class="k">Оплачено:</span>
+        <strong class="price price-accent">{{ "{:,}".format(amount) }} ₽</strong>
+      </div>
+    </div>
+
+    <a href="/" class="btn btn-primary">Продолжить покупки</a>
+  </div>
+</div>
+{% endblock %}

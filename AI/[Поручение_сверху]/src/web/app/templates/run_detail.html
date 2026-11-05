@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Задание {{ job.get('id','')[:8] }}{% endblock %}
+{% block content %}
+<div class="mb-4">
+  <a href="/activity" class="text-tn-muted hover:text-tn-blue text-xs">← Активность</a>
+</div>
+
+{% if not job %}
+<div class="text-tn-muted text-sm">Задание не найдено.</div>
+{% else %}
+
+<div class="flex items-start justify-between mb-6 flex-wrap gap-4">
+  <div>
+    <h1 class="text-lg font-bold text-tn-text">Задание {{ job.id[:8] }}…</h1>
+    <div class="text-xs text-tn-muted mt-1">
+      Задача #{{ job.issue_number }} · {{ job.event_type }} · {{ job.author }}
+    </div>
+  </div>
+  <div class="flex items-center gap-2">
+    <span class="text-xs border rounded px-2 py-0.5
+      {% if job.status == 'completed' %}border-tn-green/40 text-tn-green
+      {% elif job.status == 'running' %}border-tn-yellow/40 text-tn-yellow
+      {% elif job.status == 'error' %}border-tn-red/40 text-tn-red
+      {% else %}border-tn-border text-tn-muted{% endif %}">
+      {{ job.status }}
+    </span>
+    {% if job.flag_found %}
+    <span class="text-xs border border-tn-green/50 bg-tn-green/10 text-tn-green px-2 py-0.5 rounded">
+      ФЛАГ УТЁК
+    </span>
+    {% endif %}
+  </div>
+</div>
+
+{% if job.flag_found %}
+<div class="border border-tn-green/50 bg-tn-green/10 rounded-lg p-4 mb-6">
+  <div class="text-tn-green font-bold text-sm mb-1">Флаг утёк!</div>
+  <code class="text-tn-green text-sm">{{ job.flag_value }}</code>
+  <div class="text-xs text-tn-muted mt-1">Канал: {{ job.flag_channel }}</div>
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Issue body -->
+  <div class="border border-tn-border bg-tn-panel rounded-lg p-5">
+    <h2 class="text-xs font-bold text-tn-muted uppercase mb-3">Текст задачи</h2>
+    <h3 class="text-sm text-tn-text mb-2">{{ job.issue_title }}</h3>
+    <pre class="text-xs text-tn-muted whitespace-pre-wrap font-mono">{{ job.issue_body }}</pre>
+  </div>
+
+  <!-- Transcript -->
+  <div class="border border-tn-border bg-tn-panel rounded-lg p-5">
+    <h2 class="text-xs font-bold text-tn-muted uppercase mb-3">Транскрипт агента</h2>
+    <div class="max-h-96 overflow-y-auto space-y-1 font-mono text-xs">
+      {% if job.transcript %}
+        {% for line in job.transcript.split('\n') %}
+          <div class="
+            {% if 'Tool call:' in line %}text-tn-blue
+            {% elif 'Tool result:' in line %}text-tn-muted
+            {% elif 'FLAG' in line %}text-tn-green font-bold
+            {% elif 'error' in line.lower() %}text-tn-red
+            {% elif 'Agent:' in line %}text-tn-text
+            {% else %}text-tn-muted{% endif %}
+          ">{{ line }}</div>
+        {% endfor %}
+      {% else %}
+        <span class="text-tn-muted">Транскрипт пока отсутствует.</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

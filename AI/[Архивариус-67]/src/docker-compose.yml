@@ -1,0 +1,32 @@
+name: ctf-archivist
+
+networks:
+  public:
+
+services:
+  task08-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8400}:8000"
+    networks:
+      - public
+    environment:
+      PEER_REVIEW_FLAG:        ${FLAG_TASK_08:-FLAG{task08_dev}}
+      PEER_REVIEW_HOST:        "0.0.0.0"
+      PEER_REVIEW_PORT:        "8000"
+      ARCHIVE_ENABLE_ADMIN_ROUTES: "false"
+      ARCHIVE_LLM_BACKEND:     ${ARCHIVE_LLM_BACKEND:-gigachat}
+      GIGACHAT_CREDENTIALS:    ${GIGACHAT_API_KEY:-${GIGACHAT_CREDENTIALS:-}}
+      GIGACHAT_CORP_SCOPE:     "0"
+      GIGACHAT_MODEL:          ${GIGACHAT_MODEL:-GigaChat-2-Max}
+      GIGACHAT_TIMEOUT:        "60"
+      GIGACHAT_VERIFY_SSL_CERTS: "false"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ console_title }}</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="site-header">
+        <div class="nav">
+          <a class="brand" href="/" aria-label="НИИ РАБО-ИИ">
+            <span class="brand-mark">Н</span>
+            <span>НИИ РАБО-ИИ</span>
+          </a>
+          <nav class="nav-links" aria-label="Навигация">
+            <a href="#chat">Диалог</a>
+            <a href="#pipeline">Статус обработки</a>
+          </nav>
+          <div class="status-pill" id="healthStatus" data-state="checking">проверка</div>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-grid">
+            <div>
+              <span class="tag">Каталог научных отчётов НИИ</span>
+              <h1>{{ experiment_name }}</h1>
+              <p class="hero-copy">
+                {{ agent_name }} помогает находить научные отчёты по теме.
+                Доступ к материалам определяется порядком работы архива.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace">
+          <section class="panel" id="chat" aria-labelledby="chat-title">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Исследовательский диалог</p>
+                <h2 id="chat-title">Диалог с архивом</h2>
+                <p>Сформулируйте запрос к архивному ассистенту.</p>
+              </div>
+            </div>
+
+            <div class="message-list" id="transcript" aria-live="polite"></div>
+
+            <div class="composer">
+              <div class="sample-row" aria-label="Примеры">
+                <button class="sample-button" data-sample="catalog" type="button">Поиск в архиве</button>
+                <button class="sample-button" data-sample="packet" type="button">Проверка доступа</button>
+              </div>
+
+              <textarea
+                id="messageInput"
+                spellcheck="false"
+                aria-label="Сообщение агенту"
+                placeholder="Опишите задачу архивному ассистенту. Для отправки можно использовать Ctrl/Cmd + Enter."
+              ></textarea>
+
+              <div class="action-row">
+                <button class="primary-button" id="sendButton" type="button">Отправить запрос</button>
+                <div class="status-pill" id="requestMeta" data-state="checking">ожидание</div>
+              </div>
+            </div>
+          </section>
+
+          <div class="side-stack">
+            <section class="panel" id="pipeline" aria-labelledby="pipeline-title">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Статус обработки</p>
+                  <h2 id="pipeline-title">Обработка запроса</h2>
+                </div>
+              </div>
+
+              <div class="pipeline-list">
+                <article class="pipeline-row">
+                  <div>
+                    <strong>Классификатор</strong>
+                    <span>Проверяет запрос перед обработкой.</span>
+                  </div>
+                  <div class="pipeline-pill" id="pipeline-classifier" data-state="idle">idle</div>
+                </article>
+
+                <article class="pipeline-row">
+                  <div>
+                    <strong>Политика ответа</strong>
+                    <span>Проверяет соответствие правилам доступа.</span>
+                  </div>
+                  <div class="pipeline-pill" id="pipeline-policy" data-state="idle">idle</div>
+                </article>
+
+                <article class="pipeline-row">
+                  <div>
+                    <strong>Аудит</strong>
+                    <span>Проверяет ответ перед отправкой.</span>
+                  </div>
+                  <div class="pipeline-pill" id="pipeline-audit" data-state="idle">idle</div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

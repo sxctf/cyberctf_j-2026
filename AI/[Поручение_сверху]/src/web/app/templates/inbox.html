@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Входящие{% endblock %}
+{% block content %}
+<h1 class="text-lg font-bold text-tn-text mb-6">Входящие (флаги)</h1>
+<p class="text-tn-muted text-xs mb-6">
+  Всё, что бот опубликовал публично — комментарии PR, коммиты, задачи.
+  Если флаг утёк, он появится здесь.
+</p>
+
+<!-- Comments -->
+<div class="border border-tn-border bg-tn-panel rounded-lg mb-6">
+  <div class="border-b border-tn-border px-4 py-2 text-xs text-tn-muted uppercase tracking-wider">
+    Комментарии бота ({{ comments|length }})
+  </div>
+  {% if comments %}
+  <div class="divide-y divide-tn-border/50">
+    {% for c in comments %}
+    <div class="px-4 py-3 {% if c.flag_match %}bg-tn-green/5{% endif %}">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs text-tn-blue">{{ c.user.login if c.user else '?' }}</span>
+        <span class="text-xs text-tn-muted">on issue #{{ c.issue_url.split('/')[-1] if c.issue_url else '?' }}</span>
+        {% if c.flag_match %}
+          <span class="text-xs text-tn-green border border-tn-green/40 px-1 rounded">FLAG</span>
+        {% endif %}
+      </div>
+      {% if c.flag_match %}
+        <div class="text-xs text-tn-green font-mono flag-highlight mb-1">{{ c.flag_match[0] }}</div>
+      {% endif %}
+      <pre class="text-xs text-tn-muted whitespace-pre-wrap font-mono max-h-24 overflow-y-auto">{{ c.body[:500] }}</pre>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="px-4 py-8 text-center text-tn-muted text-sm">Комментариев пока нет.</div>
+  {% endif %}
+</div>
+
+<!-- Commits -->
+<div class="border border-tn-border bg-tn-panel rounded-lg">
+  <div class="border-b border-tn-border px-4 py-2 text-xs text-tn-muted uppercase tracking-wider">
+    Коммиты бота ({{ commits|length }})
+  </div>
+  {% if commits %}
+  <div class="divide-y divide-tn-border/50">
+    {% for c in commits %}
+    <div class="px-4 py-3 {% if c.flag_match %}bg-tn-green/5{% endif %}">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs font-mono text-tn-blue">{{ c.sha[:8] if c.sha else '?' }}</span>
+        <span class="text-xs text-tn-muted">{{ c.commit.author.name if c.commit else '?' }}</span>
+        {% if c.flag_match %}
+          <span class="text-xs text-tn-green border border-tn-green/40 px-1 rounded">FLAG</span>
+        {% endif %}
+      </div>
+      {% if c.flag_match %}
+        <div class="text-xs text-tn-green font-mono flag-highlight">{{ c.flag_match[0] }}</div>
+      {% endif %}
+      <div class="text-xs text-tn-muted">{{ c.commit.message[:200] if c.commit else '' }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="px-4 py-8 text-center text-tn-muted text-sm">Коммитов бота пока нет.</div>
+  {% endif %}
+</div>
+{% endblock %}

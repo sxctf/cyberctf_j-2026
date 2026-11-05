@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{{ name }} — ShopBot Marketplace{% endblock %}
+
+{% block head %}
+<style>
+  .breadcrumb {
+    font-size: 0.85rem; color: var(--ink-faint); margin-bottom: 18px;
+  }
+  .breadcrumb a { color: var(--accent); }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .product-layout { display: grid; grid-template-columns: 1fr 320px; gap: 22px; align-items: start; }
+  @media (max-width: 860px) { .product-layout { grid-template-columns: 1fr; } }
+  .product-main { padding: 26px 28px; }
+  .shop-line {
+    font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--ink-faint); margin-bottom: 8px;
+  }
+  .product-title { font-size: 1.55rem; font-weight: 700; line-height: 1.25; margin-bottom: 10px; }
+  .buy-box { padding: 22px; position: sticky; top: 82px; }
+  .buy-box .price { font-size: 1.9rem; margin-bottom: 4px; }
+  .stock-line { font-size: 0.85rem; color: var(--success); font-weight: 600; margin-bottom: 16px; }
+  .buy-note { font-size: 0.78rem; color: var(--ink-faint); margin-top: 12px; line-height: 1.5; text-align: center; }
+  .delivery-row {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.83rem; color: var(--ink-soft);
+    padding: 10px 0; border-top: 1px solid var(--line); margin-top: 16px;
+  }
+  .reviews-section { padding: 26px 28px; margin-top: 22px; }
+  .reviews-section h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; }
+  .review-item { border-top: 1px solid var(--line); padding: 14px 0; display: flex; gap: 12px; }
+  .review-item:first-of-type { border-top: none; }
+  .review-avatar {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent-soft); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
+  }
+  .review-author { font-weight: 600; font-size: 0.9rem; }
+  .review-text { font-size: 0.9rem; margin-top: 3px; line-height: 1.5; color: var(--ink-soft); }
+  .no-reviews { color: var(--ink-faint); font-size: 0.9rem; padding: 8px 0; }
+  /* vendor content container — class names are part of the challenge surface */
+  .vendor-content { margin-top: 18px; }
+</style>
+<!-- Пользовательский CSS продавца -->
+<style id="vendor-css">{{ vendor_css | safe }}</style>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="/">Главная</a> › <a href="/">USB-микрофоны</a> › {{ name }}
+</div>
+
+<div class="product-layout">
+  <div>
+    <div class="product-main panel">
+      <div class="shop-line">Продавец: {{ shop_name }}</div>
+      <h1 class="product-title">{{ name }}</h1>
+      <p class="price price-accent" style="font-size:1.6rem;">{{ "{:,}".format(price) }} ₽</p>
+
+      <!-- HTML продавца — поверхность для инъекции -->
+      <div class="vendor-content" id="vendor-content">
+        {{ vendor_html | safe }}
+      </div>
+    </div>
+
+    <div class="reviews-section panel">
+      <h2>Отзывы покупателей</h2>
+      {% if reviews %}
+        {% for review in reviews %}
+        <div class="review-item">
+          <div class="review-avatar">{{ review.get('author', 'Покупатель')[:1] | upper }}</div>
+          <div>
+            <div class="review-author">{{ review.get('author', 'Покупатель') }}</div>
+            <div class="stars" style="font-size:0.82rem;">{% for i in range(review.get('rating', 5)) %}★{% endfor %}<span class="off">{% for i in range(5 - review.get('rating', 5)) %}★{% endfor %}</span></div>
+            <div class="review-text">{{ review.get('text', '') }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="no-reviews">Отзывов пока нет.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div>
+    <div class="buy-box panel">
+      <div class="price price-accent">{{ "{:,}".format(price) }} ₽</div>
+      <div class="stock-line">✓ В наличии</div>
+      <form method="post" action="/cart/add">
+        <input type="hidden" name="slug" value="{{ slug }}"/>
+        <button type="submit" class="btn btn-primary btn-block">
+          В корзину
+        </button>
+      </form>
+      <div class="delivery-row">🚚 Доставка 1–3 дня</div>
+      <div class="delivery-row">↩️ Возврат в течение 14 дней</div>
+      <p class="buy-note">Оплата через защищённый шлюз ShopPay</p>
+    </div>
+  </div>
+</div>
+
+<!-- JS продавца — поверхность для инъекции -->
+<script id="vendor-js">{{ vendor_js | safe }}</script>
+{% endblock %}
