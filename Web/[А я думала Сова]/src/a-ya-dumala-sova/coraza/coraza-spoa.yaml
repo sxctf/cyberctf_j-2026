@@ -1,0 +1,23 @@
+bind: 0.0.0.0:9000
+
+log_level: info
+log_file: /dev/stdout
+log_format: console
+
+default_application: sova_app
+
+applications:
+  - name: sova_app
+    directives: |
+      SecRuleEngine On
+      SecRequestBodyAccess On
+
+      SecAction "id:90000,phase:1,pass,nolog,ctl:requestBodyProcessor=URLENCODED"
+
+      SecRule REQUEST_BODY "@rx .+" "id:100000,phase:2,deny,status:403,msg:'request body blocked'"
+
+    response_check: false
+    transaction_ttl_ms: 60000
+    log_level: info
+    log_file: /dev/stdout
+    log_format: console

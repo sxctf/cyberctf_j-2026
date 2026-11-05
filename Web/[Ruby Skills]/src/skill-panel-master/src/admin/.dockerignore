@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+docker-compose.yml
+
+# Data & temp
+admin/data/
+admin/tmp/
+
+# Logs
+logs/
+nginx/logs/
+
+# Nginx logs
+nginx/logs/
+
+# Docs
+*.md
+
+# CTF
+*flag*
+.env

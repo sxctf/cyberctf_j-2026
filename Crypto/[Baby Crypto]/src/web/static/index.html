@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>ШИФРАТОР · объект №17</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  
+  <div class="room">
+    <div class="dust"></div>
+
+    
+    <div class="monitor" id="monitor">
+      <div class="bezel">
+        
+        <div class="plaque">
+          <span class="plaque-line">УЗЕЛ КРИПТОГРАФИЧЕСКОЙ СВЯЗИ</span>
+          <span class="plaque-sub">криптомодуль «ВОЛХВ-3» · объект №17</span>
+        </div>
+        <div class="screws"><i></i><i></i><i></i><i></i></div>
+
+        
+        <div class="screen" id="screen">
+          <div class="crt">
+            <div class="phosphor" id="phosphor"><span id="out"></span><span class="caret" id="caret">█</span></div>
+          </div>
+          <div class="scanlines"></div>
+          <div class="glow"></div>
+          <div class="vignette"></div>
+          <div class="flicker"></div>
+          
+          <div class="power" id="power">
+            <div class="power-dot"></div>
+          </div>
+        </div>
+
+        
+        <div class="panel">
+          <div class="gauge"><span class="led led-pwr"></span><b>ПИТАНИЕ</b></div>
+          <div class="gauge"><span class="led led-net" id="ledNet"></span><b>КАНАЛ</b></div>
+          <div class="gauge"><span class="led led-hdd" id="ledHdd"></span><b>ОБМЕН</b></div>
+          <span class="spacer"></span>
+          <div class="brand">ШИФРАТОР&nbsp;3.1</div>
+          <div class="knob"></div>
+        </div>
+      </div>
+      <div class="stand"></div>
+    </div>
+
+    
+    <div class="statusbar">
+      <span id="statusText">ИНИЦИАЛИЗАЦИЯ…</span>
+      <span class="spacer"></span>
+      <span id="clock">--:--:--</span>
+    </div>
+
+    <div class="hint" id="hint">кликните по экрану и печатайте · Enter — отправить</div>
+  </div>
+
+  
+  <input id="sink" autocomplete="off" autocorrect="off" autocapitalize="off"
+         spellcheck="false" aria-hidden="true">
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

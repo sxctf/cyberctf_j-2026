@@ -1,0 +1,7 @@
+services:
+  rustwallet:
+    build: .
+    image: rustwallet:local
+    ports:
+      - "7777:7777"
+    restart: unless-stopped

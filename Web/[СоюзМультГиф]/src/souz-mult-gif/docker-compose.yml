@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+      - TWOFA_SERVICE_URL=http://2fa-service:3001
+      - FLAG=${FLAG:-flag{THIS_IS_FAKE_FLAG}}
+      - ADMIN_PASSWORD_FILE=/shared/admin_password
+    volumes:
+      - admin_secret:/shared
+    depends_on:
+      - 2fa-service
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  2fa-service:
+    build: ./2fa-service
+    expose:
+      - "3001"
+
+  bot:
+    build: ./bot
+    ports:
+      - "8080:8080"
+    environment:
+      - BACKEND_URL=http://backend:8000
+      - FRONTEND_URL=http://frontend
+      - TWOFA_SERVICE_URL=http://2fa-service:3001
+      - ADMIN_PASSWORD_FILE=/shared/admin_password
+    volumes:
+      - admin_secret:/shared:ro
+    depends_on:
+      - frontend
+      - backend
+      - 2fa-service
+
+volumes:
+  admin_secret:

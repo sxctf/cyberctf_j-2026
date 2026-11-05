@@ -1,0 +1,30 @@
+services:
+  shifrator:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    image: ctf-shifrator:latest
+    container_name: ctf-shifrator
+    restart: unless-stopped
+    ports:
+      - "1337:1337"   # терминальный интерфейс:  nc <host> 1337
+      - "8080:8080"   # веб-витрина:            http://<host>:8080
+    environment:
+      FLAG: "flag{local_test}"
+      PORT: "1337"          # порт TCP-ядра
+      BACKEND_HOST: "127.0.0.1"
+      BACKEND_PORT: "1337"  # куда веб-прокси стучится (== ядро)
+      WEB_HOST: "0.0.0.0"
+      WEB_PORT: "8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    ulimits:
+      nproc: 512
+      nofile:
+        soft: 2048
+        hard: 4096

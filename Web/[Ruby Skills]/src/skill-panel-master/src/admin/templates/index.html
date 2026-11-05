@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070f;
+  --card:rgba(17,22,40,.7);
+  --card-2:rgba(13,17,32,.85);
+  --border:rgba(120,150,220,.08);
+  --border-hover:rgba(120,150,220,.18);
+  --text:#e8ecf5;
+  --text-dim:#8b93a8;
+  --text-mute:#5a6178;
+  --cyan:#22d3ee;
+  --blue:#3b82f6;
+  --violet:#8b5cf6;
+  --orange:#fb923c;
+  --radius:16px;
+  --radius-sm:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 700px 500px at 100% 60%, rgba(251,146,60,.14), transparent 65%),
+    radial-gradient(ellipse 600px 500px at 100% 100%, rgba(251,90,60,.10), transparent 65%),
+    radial-gradient(ellipse 900px 700px at 0% 0%, rgba(59,130,246,.10), transparent 60%),
+    radial-gradient(ellipse 700px 600px at 60% 20%, rgba(139,92,246,.06), transparent 65%);
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(120,150,220,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,150,220,.025) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse at 50% 40%,#000 20%,transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 20%,transparent 75%);
+}
+
+.app{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:72px 1fr;
+  min-height:100vh;
+  max-width:1400px;
+  margin:0 auto;
+  padding:20px;
+  gap:20px;
+}
+
+/* Sidebar */
+.sidebar{
+  display:flex;flex-direction:column;align-items:center;
+  background:linear-gradient(180deg,rgba(17,22,40,.85),rgba(10,14,26,.85));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px 0;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 8px 40px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.nav-icon{
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:12px;
+  color:var(--text-mute);
+  cursor:pointer;
+  position:relative;
+  transition:color .2s,background .2s,transform .2s;
+  text-decoration:none;
+}
+.nav-icon svg{width:20px;height:20px;stroke-width:1.8}
+.nav-icon:hover{
+  color:var(--text);
+  background:rgba(120,150,220,.06);
+  transform:translateY(-1px);
+}
+.nav-icon.active{
+  color:#fff;
+  background:linear-gradient(180deg,rgba(59,130,246,.35),rgba(59,130,246,.15));
+  box-shadow:0 0 20px rgba(59,130,246,.4),inset 0 0 12px rgba(59,130,246,.2);
+}
+.nav-icon.active::before{
+  content:'';position:absolute;left:-18px;top:50%;transform:translateY(-50%);
+  width:3px;height:20px;border-radius:0 3px 3px 0;
+  background:var(--blue);
+  box-shadow:0 0 10px var(--blue);
+}
+
+/* Main grid */
+.main{display:flex;flex-direction:column;gap:20px;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:20px}
+
+/* Card */
+.card{
+  background:linear-gradient(180deg,var(--card),var(--card-2));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px;
+  position:relative;
+  overflow:hidden;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.03);
+  transition:border-color .25s,transform .25s,box-shadow .25s;
+}
+.card:hover{
+  border-color:var(--border-hover);
+  box-shadow:0 12px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+/* Greeting */
+.card--greeting{
+  grid-column:span 4;
+  display:flex;flex-direction:column;
+  min-height:300px;
+  background:
+    radial-gradient(ellipse 500px 300px at 0% 100%, rgba(59,130,246,.15), transparent 60%),
+    radial-gradient(ellipse 400px 200px at 100% 0%, rgba(139,92,246,.10), transparent 60%),
+    linear-gradient(180deg,var(--card),var(--card-2));
+}
+.greeting-top{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:12px;margin-bottom:auto;
+}
+.greeting-hello{font-size:13px;color:var(--text-dim);font-weight:500;margin-bottom:6px}
+.greeting-name{
+  font-size:30px;font-weight:700;
+  color:#fff;letter-spacing:-.5px;line-height:1.1;
+  margin-bottom:10px;
+}
+.greeting-sub{font-size:13px;color:var(--text-dim);line-height:1.6;max-width:260px}
+.time-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:rgba(120,150,220,.08);
+  border:1px solid rgba(120,150,220,.12);
+  border-radius:999px;
+  font-size:12px;font-weight:600;
+  color:var(--text);
+  letter-spacing:.3px;
+  flex-shrink:0;
+}
+.time-pill svg{width:12px;height:12px;color:var(--cyan)}
+.wave{width:100%;height:200px;margin-top:auto;display:block}
+
+/* Slot */
+.card--slot{
+  grid-column:span 2;
+  min-height:170px;
+  display:flex;flex-direction:column;
+}
+.slot-title{
+  font-size:14px;font-weight:600;color:#fff;
+  margin-bottom:6px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.slot-title .dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 10px var(--cyan);
+}
+.slot-title .dot--cyan{background:var(--cyan)!important;box-shadow:0 0 10px var(--cyan)!important}
+.slot-empty{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  border:1px dashed rgba(120,150,220,.15);
+  border-radius:var(--radius-sm);
+  color:var(--text-mute);
+  font-size:42px;
+  letter-spacing:.3px;
+  margin-top:14px;
+  background:rgba(120,150,220,.015);
+  transition:border-color .2s,color .2s;
+}
+.card--slot:hover .slot-empty{
+  border-color:rgba(120,150,220,.28);
+  color:var(--text-dim);
+}
+.dot--violet{background:var(--violet)!important;box-shadow:0 0 10px var(--violet)!important}
+.dot--orange{background:var(--orange)!important;box-shadow:0 0 10px var(--orange)!important}
+.dot--green{background:#22c55e!important;box-shadow:0 0 10px #22c55e!important}
+.dot--red{background:#ef4444!important;box-shadow:0 0 10px #ef4444!important}
+
+/* Ping card */
+.card--ping{grid-column:span 6;min-height:140px}
+.ping-row{display:flex;gap:10px;align-items:center;margin-top:10px}
+.ping-input{
+  flex:1;background:#0a0e1a;border:1px solid var(--border);border-radius:8px;
+  padding:10px 14px;color:var(--text);font-family:inherit;font-size:13px;
+  outline:none;transition:border-color .2s;
+}
+.ping-input:focus{border-color:var(--cyan)}
+.ping-btn{
+  padding:10px 20px;background:linear-gradient(180deg,var(--blue),#2563eb);
+  border:1px solid var(--blue);border-radius:8px;color:#fff;
+  font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+.ping-btn:hover{box-shadow:0 0 16px rgba(59,130,246,.5)}
+.ping-btn:disabled{opacity:.5;cursor:not-allowed}
+.ping-result{
+  margin-top:12px;padding:12px 14px;background:#0a0e1a;border:1px solid var(--border);
+  border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--text-dim);max-height:200px;overflow-y:auto;display:none;
+  white-space:pre-wrap;word-break:break-all;
+}
+.ping-result.visible{display:block}
+
+/* Responsive */
+@media(max-width:1080px){
+  .card--greeting{grid-column:span 6}
+  .card--slot{grid-column:span 3}
+}
+@media(max-width:760px){
+  .app{grid-template-columns:1fr;padding:12px;gap:12px}
+  .sidebar{
+    flex-direction:row;
+    padding:8px 12px;
+    border-radius:var(--radius);
+    overflow-x:auto;
+  }
+  .nav-icon.active::before{display:none}
+  .grid{grid-template-columns:1fr;gap:14px}
+  .card--greeting,
+  .card--slot{grid-column:span 1}
+  .greeting-name{font-size:24px}
+  .card{padding:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <a href="/admin" class="nav-icon active" title="Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+    </a>
+    <a href="/admin/skills" class="nav-icon" title="Recent Skills">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    </a>
+  </aside>
+
+  <main class="main">
+    <div class="grid">
+
+      <section class="card card--greeting">
+        <div class="greeting-top">
+          <div>
+            <div class="greeting-hello">{{ greeting }}</div>
+            <div class="greeting-name">{{ username }}</div>
+            <div class="greeting-sub">Stay focused and make it happen.</div>
+          </div>
+          <div class="time-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            {{ current_time }}
+          </div>
+        </div>
+        <svg class="wave" id="wave-svg" viewBox="0 0 400 130" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="waveGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity=".35"/>
+              <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="waveStroke" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#22d3ee"/>
+              <stop offset="100%" stop-color="#3b82f6"/>
+            </linearGradient>
+          </defs>
+          <path class="wave-fill" d="" fill="url(#waveGrad)"/>
+          <path class="wave-line" d="" fill="none" stroke="url(#waveStroke)"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <g class="wave-marker" style="display:none">
+            <circle r="7" fill="#22d3ee" opacity=".25"/>
+            <circle r="3.5" fill="#fff"/>
+          </g>
+        </svg>
+      </section>
+
+      <section class="card card--slot">
+        <div class="slot-title">Succusses Skill Upload<span class="dot"></span></div>
+        <div class="slot-empty">{{ stats.approved }}</div>
+      </section>
+
+      <section class="card card--slot">
+        <div class="slot-title">Total Skills Register<span class="dot dot--violet"></span></div>
+        <div class="slot-empty">{{ stats.total }}</div>
+      </section>
+
+      <section class="card card--slot">
+        <div class="slot-title">Rejected Skills<span class="dot dot--orange"></span></div>
+        <div class="slot-empty">{{ stats.rejected }}</div>
+      </section>
+
+      <section class="card card--ping">
+        <div class="slot-title">Service Health<span class="dot dot--green"></span></div>
+        <div class="ping-row">
+          <input class="ping-input" id="ping-host" placeholder="Host to ping (e.g. chat)" value="chat" />
+          <button class="ping-btn" id="ping-btn">Ping</button>
+        </div>
+        <div class="ping-result" id="ping-result"></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  console.log('[wave] script loaded');
+
+  const svg = document.getElementById('wave-svg');
+  if (!svg) { console.warn('[wave] svg not found'); return; }
+
+  const fillEl    = svg.querySelector('.wave-fill');
+  const lineEl    = svg.querySelector('.wave-line');
+  const markerG   = svg.querySelector('.wave-marker');
+
+  const timestamps = {{ (timestamps | default([])) | tojson }};
+  console.log('[wave] timestamps:', timestamps);
+
+  const VB_W = 400, VB_H = 130, PAD_TOP = 14, PAD_BOT = 14;
+  const baseY = VB_H - PAD_BOT;
+  const topY  = PAD_TOP;
+
+function smoothPath(pts) {
+    if (pts.length < 2) return '';
+    let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || p2;
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)} `
+         + `${cp2x.toFixed(2)} ${cp2y.toFixed(2)} `
+         + `${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+    }
+    return d;
+  }
+
+  function renderFlat() {
+    fillEl.setAttribute('d', `M 0 ${baseY} L ${VB_W} ${baseY} L ${VB_W} ${VB_H} L 0 ${VB_H} Z`);
+    lineEl.setAttribute('d', `M 0 ${baseY} L ${VB_W} ${baseY}`);
+    markerG.style.display = 'none';
+  }
+
+function straightPath(pts) {
+  if (pts.length < 2) return '';
+  let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+  for (let i = 1; i < pts.length; i++) {
+    d += ` L ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)}`;
+  }
+  return d;
+}
+
+function render(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) { renderFlat(); return; }
+
+  const sorted = arr.slice().sort((a, b) => a - b);
+  const tMin = sorted[0];
+  const tMax = sorted[sorted.length - 1];
+  const range = (tMax - tMin) || 1;
+  const total = sorted.length;
+  const usableH = baseY - topY;
+
+  const points = [{ x: 0, y: baseY }];
+  sorted.forEach((t, i) => {
+    const x = ((t - tMin) / range) * VB_W;
+    const y = baseY - ((i + 1) / total) * usableH;
+    points.push({ x, y });
+  });
+
+  const last = points[points.length - 1];
+  if (last.x < VB_W) last.x = VB_W;
+
+  const lineD = straightPath(points);
+  fillEl.setAttribute('d', lineD + ` L ${VB_W} ${VB_H} L 0 ${VB_H} Z`);
+  lineEl.setAttribute('d', lineD);
+
+  markerG.style.display = '';
+  markerG.setAttribute('transform',
+    `translate(${last.x.toFixed(2)} ${last.y.toFixed(2)})`);
+}
+
+
+  render(timestamps);
+  console.log('[wave] rendered');
+
+  // ── Ping health check ──
+  const pingInput = document.getElementById('ping-host');
+  const pingBtn   = document.getElementById('ping-btn');
+  const pingRes   = document.getElementById('ping-result');
+
+  pingBtn.addEventListener('click', async () => {
+    const host = pingInput.value.trim();
+    if (!host) return;
+
+    pingBtn.disabled = true;
+    pingBtn.textContent = 'Pinging...';
+    pingRes.classList.remove('visible');
+
+    try {
+      const res = await fetch(`/admin/healthcheck?host=${encodeURIComponent(host)}`);
+      const text = await res.text();
+      pingRes.textContent = text;
+      pingRes.classList.add('visible');
+    } catch (e) {
+      pingRes.textContent = `Error: ${e.message}`;
+      pingRes.classList.add('visible');
+    } finally {
+      pingBtn.disabled = false;
+      pingBtn.textContent = 'Ping';
+    }
+  });
+
+  pingInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') pingBtn.click();
+  });
+
+})();
+</script>
+
+
+</body>
+</html>

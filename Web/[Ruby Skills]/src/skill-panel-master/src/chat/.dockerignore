@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Git
+.git/
+.gitignore
+
+# Data & temp
+data/
+tmp/
+agents/.env
+
+# Logs
+logs/
+nginx/logs/
+
+# Nginx logs
+nginx/logs/
+

@@ -1,0 +1,242 @@
+/* App.css – Ретрофутуризм, стиль 1960-70х, конструкторское бюро */
+
+:root {
+    --bg-dark: #1e1910;
+    --bg-panel: #2c261a;
+    --accent: #d94f1a;
+    --accent-dark: #a33c12;
+    --border-gold: #c9a03d;
+    --text-light: #f0e6b2;
+    --text-dim: #b9aa7a;
+    --glow: rgba(217, 79, 26, 0.6);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg-dark);
+    font-family: 'PT Mono', monospace;
+    color: var(--text-light);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* рамки как у старой аппаратуры */
+.panel, .auth-card, .session-card, .session-detail, .navbar, .hero {
+    border: 2px solid var(--border-gold);
+    background: var(--bg-panel);
+    box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
+}
+
+/* навигация – как панель прибора */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 2rem;
+    background: #1f1a0f;
+    border-bottom: 4px solid var(--accent);
+    margin-bottom: 1rem;
+    font-family: 'Roboto Condensed', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.nav-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--accent);
+    text-shadow: 0 0 3px var(--glow);
+    position: relative;
+    padding-left: 2rem;
+}
+.nav-brand::before {
+    content: "⚡";
+    position: absolute;
+    left: 0;
+    top: -2px;
+    color: var(--accent);
+    font-size: 1.6rem;
+}
+
+.nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    margin-left: 1.5rem;
+    border-bottom: 1px dashed var(--border-gold);
+    transition: 0.2s;
+}
+.nav-links a:hover {
+    color: var(--accent);
+    border-bottom-style: solid;
+}
+
+.container {
+    max-width: 1300px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* Герой с лозунгом */
+.hero {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: linear-gradient(135deg, #2c261a 0%, #1f1a0f 100%);
+    margin-bottom: 2rem;
+}
+.hero h1 {
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 2.5rem;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin: 0;
+}
+.hero p {
+    font-size: 1rem;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border-gold);
+    display: inline-block;
+    padding-top: 0.5rem;
+}
+
+/* Карточки сессий как чертежи */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.8rem;
+    margin-top: 2rem;
+}
+
+.session-card {
+    padding: 1rem 1.2rem;
+    border-left: 6px solid var(--accent);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.session-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 8px 8px 0px rgba(0,0,0,0.4);
+}
+.session-card h3 {
+    font-size: 1.3rem;
+    margin: 0.5rem 0;
+    color: var(--accent);
+    font-family: 'Roboto Condensed', sans-serif;
+}
+.session-card p {
+    margin: 0.3rem 0;
+    font-size: 0.8rem;
+}
+
+/* кнопки в стиле "пульт управления" */
+.btn {
+    background: #2a2418;
+    border: 1px solid var(--border-gold);
+    color: var(--text-light);
+    padding: 0.4rem 1rem;
+    font-family: 'PT Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.btn-warning {
+    background: var(--accent-dark);
+    border-color: var(--accent);
+    color: #1a160d;
+    font-weight: bold;
+}
+.btn:hover {
+    background: var(--accent);
+    color: #1a160d;
+    border-color: var(--text-light);
+}
+
+/* форма логина / профиля */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 65vh;
+}
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem 1.5rem;
+}
+.auth-card input {
+    width: 100%;
+    background: #1f1a0f;
+    border: 1px solid var(--border-gold);
+    padding: 0.6rem;
+    margin: 0.5rem 0;
+    color: var(--text-light);
+    font-family: 'PT Mono', monospace;
+}
+.auth-card button {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+/* страница сессии – имитация рабочего места */
+.session-detail {
+    padding: 1.5rem;
+}
+.render-progress {
+    background: #2a2418;
+    height: 12px;
+    border: 1px solid var(--border-gold);
+    margin: 1rem 0;
+}
+.render-bar {
+    background: var(--accent);
+    width: 0%;
+    height: 100%;
+    transition: width 0.1s linear;
+}
+.render-log {
+    background: #0f0c07;
+    border: 1px solid #5e4f2e;
+    padding: 0.5rem;
+    height: 150px;
+    overflow-y: auto;
+    font-size: 0.7rem;
+    font-family: monospace;
+}
+.participant-list {
+    list-style: none;
+    padding-left: 0;
+}
+.participant-list li {
+    background: #1f1a0f;
+    margin: 0.3rem 0;
+    padding: 0.3rem 0.6rem;
+    border-left: 3px solid var(--accent);
+}
+
+input[type="text"], input[type="password"], input[type="login"], input[type="number"] {
+    background-color: #1f1a0f;
+    border: 1px solid #c9a03d;
+    color: #f0e6b2 !important;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-family: 'PT Mono', monospace;
+}
+input::placeholder {
+    color: #b9aa7a;
+}
+input:focus {
+    outline: none;
+    border-color: #d94f1a;
+}
+input[type="color"] {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #c9a03d;
+    background: #1f1a0f;
+    cursor: pointer;
+}

@@ -1,0 +1,114 @@
+# RU: Это описание виртуальной платы для эмулятора, а не код прошивки.
+# EN: This is the virtual board description for the emulator, not firmware code.
+# RU: Здесь указано, какой CPU/SVD использовать, какие memory regions создать,
+# RU: какой binary загрузить и какие host-side устройства подключить.
+# EN: It tells which CPU/SVD to use, which memory regions to create,
+# EN: which binary to load, and which host-side devices to attach.
+
+# RU: CPU-level настройки.
+# EN: CPU-level settings.
+cpu:
+  # RU: SVD = System View Description.
+  # EN: SVD = System View Description.
+  # RU: Это XML-описание периферии STM32F407 и адресов ее регистров.
+  # EN: This XML file describes STM32F407 peripherals and their register addresses.
+  # RU: Эмулятор по SVD узнает, что USART1, GPIOA, TIM2 и другие блоки существуют.
+  # EN: The emulator learns from SVD that USART1, GPIOA, TIM2, and other blocks exist.
+  svd: ../../vendor/stm32-emulator/stm32-emulator-main/saturn/stm32f407.svd
+
+  # RU: Адрес boot vector table для Cortex-M.
+  # EN: Cortex-M boot vector table address.
+  # RU: При reset CPU читает отсюда два 32-bit слова:
+  # EN: On reset, the CPU reads two 32-bit words from here:
+  # RU:   +0: initial stack pointer
+  # EN:   +0: initial stack pointer
+  # RU:   +4: reset handler address
+  # EN:   +4: reset handler address
+  vector_table: 0x00000000
+
+# RU: Memory regions, видимые emulated CPU.
+# EN: Memory regions visible to the emulated CPU.
+# RU: `start` - базовый адрес региона.
+# EN: `start` is the region base address.
+# RU: `size` - размер региона в bytes; hex-числа здесь нормальны.
+# EN: `size` is the region size in bytes; hex values are normal here.
+# RU:   0x1000  = 4096 bytes = 4 KiB
+# EN:   0x1000  = 4096 bytes = 4 KiB
+# RU:   0x18000 = 98304 bytes = 96 KiB
+# EN:   0x18000 = 98304 bytes = 96 KiB
+# RU:   0x20000 = 131072 bytes = 128 KiB
+# EN:   0x20000 = 131072 bytes = 128 KiB
+regions:
+  # RU: Boot alias region.
+  # EN: Boot alias region.
+  # RU: Загружает firmware.bin по адресу 0x00000000, чтобы CPU сразу увидел vector table.
+  # EN: Maps firmware.bin at 0x00000000 so the CPU immediately sees the vector table.
+  - name: BOOT_ROM_ALIAS
+    # RU: Начало региона.
+    # EN: Region start address.
+    start: 0x00000000
+    # RU: Файл, который эмулятор загрузит в этот регион.
+    # EN: File that the emulator loads into this region.
+    load: firmware.bin
+    # RU: Размер региона: 4 KiB.
+    # EN: Region size: 4 KiB.
+    size: 0x1000
+
+  # RU: Нормальный STM32 internal flash address.
+  # EN: Normal STM32 internal flash address.
+  # RU: У реальных STM32F4 flash обычно видна с 0x08000000.
+  # EN: Real STM32F4 flash is usually visible at 0x08000000.
+  # RU: Мы mirror-им тот же firmware.bin сюда, чтобы layout был похож на реальный STM32.
+  # EN: We mirror the same firmware.bin here so the layout resembles a real STM32.
+  - name: ROM
+    # RU: Базовый адрес flash mapping.
+    # EN: Flash mapping base address.
+    start: 0x08000000
+    # RU: Загружаем тот же firmware.bin.
+    # EN: Load the same firmware.bin.
+    load: firmware.bin
+    # RU: Пока firmware маленькая, 4 KiB достаточно.
+    # EN: The firmware is small for now, so 4 KiB is enough.
+    size: 0x1000
+
+  # RU: CCM SRAM region.
+  # EN: CCM SRAM region.
+  # RU: STM32F407 имеет Core Coupled Memory по адресу 0x10000000.
+  # EN: STM32F407 has Core Coupled Memory at 0x10000000.
+  # RU: Текущий SRAM challenge ее не использует, но chip memory map ее содержит.
+  # EN: The current SRAM challenge does not use it, but the chip memory map includes it.
+  - name: RAM-CCM
+    # RU: Базовый адрес CCM RAM.
+    # EN: CCM RAM base address.
+    start: 0x10000000
+    # RU: 0x18000 = 96 KiB.
+    # EN: 0x18000 = 96 KiB.
+    size: 0x18000
+
+  # RU: Main SRAM region.
+  # EN: Main SRAM region.
+  # RU: SRAM recovery challenge пишет V2 crash trace в начало этого региона:
+  # RU: CRSH header по 0x20000000, SRM2 manifest по pointer из header.
+  # EN: The SRAM recovery challenge writes the V2 crash trace at the start of this region:
+  # EN: CRSH header at 0x20000000, SRM2 manifest via the header pointer.
+  - name: RAM
+    # RU: Базовый адрес основной SRAM.
+    # EN: Main SRAM base address.
+    start: 0x20000000
+    # RU: 0x20000 = 128 KiB; конец региона exclusive: 0x20020000.
+    # EN: 0x20000 = 128 KiB; exclusive end address: 0x20020000.
+    size: 0x20000
+
+# RU: Host-side устройства, подключенные к emulated STM32 peripherals.
+# EN: Host-side devices attached to emulated STM32 peripherals.
+devices:
+  # RU: Подключает serial probe эмулятора к USART1.
+  # EN: Attach the emulator serial probe to USART1.
+  # RU: TUI-команда `uart probe` идет через этот виртуальный провод в firmware.
+  # EN: TUI command `uart probe` goes through this virtual wire into firmware.
+  # RU: Firmware пишет в USART1, а emulator печатает это как UART_TX.
+  # EN: Firmware writes to USART1, and the emulator prints that as UART_TX.
+  usart_probe:
+    # RU: Имя периферии из SVD, к которой подключается probe.
+    # EN: Peripheral name from the SVD to which the probe is attached.
+    - peripheral: USART1

@@ -1,0 +1,9 @@
+{
+  "name": "ctf-bot",
+  "version": "1.0.0",
+  "main": "bot.js",
+  "dependencies": {
+    "puppeteer": "^21.0.0",
+    "telegraf": "^4.15.0"
+  }
+}

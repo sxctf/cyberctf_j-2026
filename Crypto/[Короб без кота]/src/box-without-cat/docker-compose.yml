@@ -1,0 +1,10 @@
+name: box-without-cat
+
+services:
+  challenge:
+    image: box-without-cat:latest
+    build: .
+    init: true
+    working_dir: /work
+    volumes:
+      - .:/work

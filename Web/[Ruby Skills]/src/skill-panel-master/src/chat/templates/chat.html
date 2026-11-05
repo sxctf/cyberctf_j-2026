@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruby // LAB-TERMINAL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/languages/javascript.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/languages/json.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/languages/bash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@4/marked.min.js"></script>
+<style>
+:root{
+  --bg:#080202;
+  --bg-2:#0f0303;
+  --panel:#140505;
+  --panel-2:#1a0707;
+  --border:#3a0a0a;
+  --border-bright:#5c0e0e;
+  --red:#ff1f1f;
+  --red-bright:#ff3b3b;
+  --red-soft:#ff7a7a;
+  --red-dim:#8a2020;
+  --red-deep:#4a0808;
+  --cyan:#00fff0;
+  --text:#ffcccc;
+  --text-dim:#a86a6a;
+  --text-mute:#6b3a3a;
+  --glow-sm:0 0 6px rgba(255,31,31,.55);
+  --glow-md:0 0 12px rgba(255,31,31,.45),0 0 30px rgba(255,31,31,.18);
+  --glow-lg:0 0 20px rgba(255,31,31,.65),0 0 50px rgba(255,31,31,.3);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,31,31,.10), transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(255,31,31,.06), transparent 60%),
+    linear-gradient(180deg,#080202 0%,#0a0303 100%);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow-x:hidden;
+}
+
+/* ── Grid floor ── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(255,31,31,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,31,31,.045) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(ellipse at 50% 50%, #000 30%, transparent 85%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 50%, #000 30%, transparent 85%);
+}
+/* ── CRT scanlines + vignette ── */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:
+    repeating-linear-gradient(to bottom,
+      transparent 0, transparent 2px,
+      rgba(0,0,0,.16) 3px, transparent 4px),
+    radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%);
+  mix-blend-mode:multiply;
+  animation:scan 9s linear infinite;
+}
+@keyframes scan{from{background-position:0 0,0 0}to{background-position:0 200px,0 0}}
+
+
+/* ══ SMOKE / HAZE ══ */
+.smoke-layer{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;user-select:none}
+.smoke{
+  position:absolute;border-radius:50%;
+  filter:blur(70px);
+  background:radial-gradient(circle, rgba(255,31,31,.30), transparent 68%);
+  mix-blend-mode:screen;will-change:transform,opacity;opacity:.4;
+}
+.smoke.s1{width:560px;height:560px;top:-12%;left:-14%;animation:drift1 26s ease-in-out infinite}
+.smoke.s2{
+  width:680px;height:680px;bottom:-18%;right:-16%;
+  background:radial-gradient(circle, rgba(255,60,60,.24), transparent 70%);
+  animation:drift2 34s ease-in-out infinite;opacity:.32;
+}
+.smoke.s3{
+  width:420px;height:420px;top:38%;left:52%;
+  background:radial-gradient(circle, rgba(255,20,20,.20), transparent 70%);
+  animation:drift3 30s ease-in-out infinite;opacity:.28;
+}
+.smoke.s4{
+  width:340px;height:340px;top:8%;left:38%;
+  background:radial-gradient(circle, rgba(255,80,80,.18), transparent 70%);
+  animation:drift4 22s ease-in-out infinite;opacity:.22;
+}
+@keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(130px,90px) scale(1.15)}}
+@keyframes drift2{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(-150px,-110px) scale(.9)}}
+@keyframes drift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-110px,130px) scale(1.2)}}
+@keyframes drift4{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(90px,-70px) rotate(20deg)}}
+
+.haze{
+  position:fixed;inset:-10% 0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(180deg,
+    transparent 0,
+    transparent 140px,
+    rgba(255,31,31,.045) 200px,
+    rgba(255,31,31,.075) 240px,
+    rgba(255,31,31,.045) 280px,
+    transparent 340px
+  );
+  mix-blend-mode:screen;
+  animation:hazeMove 42s linear infinite;
+  will-change:background-position;
+}
+@keyframes hazeMove{0%{background-position:0 0}100%{background-position:0 680px}}
+.haze::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%, rgba(255,31,31,.05), transparent 70%);
+  animation:breathe 7s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+
+/* ── Glitch bars ── */
+.glitch-bar{
+  position:fixed;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,31,31,.95) 20%,
+    rgba(0,255,240,.5) 50%,
+    rgba(255,31,31,.95) 80%,
+    transparent 100%);
+  box-shadow:0 0 14px rgba(255,31,31,.8),0 0 30px rgba(255,31,31,.4);
+  pointer-events:none;z-index:999;
+  opacity:0;top:0;
+  mix-blend-mode:screen;
+  animation:glitchBar 9s infinite;
+}
+.glitch-bar.g2{animation-delay:4.3s;animation-duration:11s;height:1px}
+@keyframes glitchBar{
+  0%,89%,100%{opacity:0;top:0}
+  90%{opacity:.9;top:28%}
+  91%{opacity:.5;top:63%}
+  92%{opacity:.95;top:19%}
+  93%{opacity:.65;top:78%}
+  94%{opacity:0;top:45%}
+}
+
+/* ── HEADER ── */
+.header{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:14px 24px;
+  background:linear-gradient(180deg,#140404,#0b0202);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 1px 0 rgba(255,31,31,.15),0 8px 24px rgba(0,0,0,.6);
+  flex-shrink:0;position:relative;z-index:2;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-mark{
+  color:var(--red-bright);font-size:16px;
+  text-shadow:var(--glow-md);
+  animation:flicker 3.5s infinite steps(1);
+}
+.brand-title{
+  position:relative;
+  font-size:14px;font-weight:700;letter-spacing:2px;
+  color:var(--red-soft);
+  text-shadow:0 0 8px rgba(255,31,31,.7),0 0 22px rgba(255,31,31,.35);
+  text-transform:uppercase;display:inline-block;
+}
+.brand-title::before,
+.brand-title::after{
+  content:attr(data-text);
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;opacity:0;
+  letter-spacing:inherit;font-weight:inherit;font-size:inherit;
+  text-transform:inherit;
+}
+.brand-title::before{
+  color:var(--red);
+  text-shadow:0 0 8px rgba(255,31,31,.9);
+  clip-path:polygon(0 0,100% 0,100% 46%,0 46%);
+  animation:glitchTop 4.2s infinite steps(1);
+}
+.brand-title::after{
+  color:var(--cyan);
+  text-shadow:0 0 8px rgba(0,255,240,.9);
+  clip-path:polygon(0 54%,100% 54%,100% 100%,0 100%);
+  animation:glitchBot 3.6s infinite steps(1);
+}
+@keyframes glitchTop{
+  0%,86%,100%{opacity:0;transform:translate(0,0)}
+  87%{opacity:.9;transform:translate(-3px,-2px)}
+  88%{opacity:.6;transform:translate(3px,1px)}
+  89%{opacity:1;transform:translate(-2px,0)}
+  90%{opacity:0;transform:translate(0,0)}
+}
+@keyframes glitchBot{
+  0%,82%,100%{opacity:0;transform:translate(0,0)}
+  83%{opacity:.9;transform:translate(3px,2px)}
+  84%{opacity:.6;transform:translate(-3px,-1px)}
+  85%{opacity:1;transform:translate(2px,0)}
+  86%{opacity:0;transform:translate(0,0)}
+}
+@keyframes flicker{
+  0%,92%,100%{opacity:1}
+  93%{opacity:.35}
+  94%{opacity:1}
+  96%{opacity:.5}
+  97%{opacity:1}
+}
+.brand-tag{font-size:11px;color:var(--text-mute);letter-spacing:1px}
+
+/* ── Back link to index ── */
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  color:var(--red-soft);
+  text-decoration:none;text-transform:uppercase;
+  border:1px solid var(--border-bright);
+  border-radius:3px;
+  background:rgba(255,31,31,.04);
+  transition:all .2s;
+  flex-shrink:0;
+}
+.back-link svg{width:12px;height:12px;transition:transform .2s}
+.back-link:hover{
+  color:#fff;
+  border-color:var(--red);
+  background:rgba(255,31,31,.14);
+  box-shadow:0 0 10px rgba(255,31,31,.4),inset 0 0 8px rgba(255,31,31,.15);
+  text-shadow:0 0 6px rgba(255,31,31,.85);
+}
+.back-link:hover svg{transform:translateX(-2px)}
+
+/* ══ TAGS: Web glows, others dimmed ══ */
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tags .tag{
+  font-size:10px;letter-spacing:1.2px;
+  padding:3px 8px;
+  border:1px solid #2a0808;
+  border-radius:2px;
+  color:#5a2a2a;
+  background:rgba(255,31,31,.012);
+  text-transform:uppercase;
+  opacity:.55;
+  transition:opacity .25s,color .25s,box-shadow .25s,border-color .25s;
+}
+.tags .tag-active{
+  color:#ff5a5a;
+  border-color:#8a1a1a;
+  background:rgba(255,31,31,.09);
+  opacity:1;
+  text-shadow:0 0 8px rgba(255,31,31,.9),0 0 16px rgba(255,31,31,.55);
+}
+@keyframes tagGlow{
+  0%,100%{
+    box-shadow:inset 0 0 10px rgba(255,31,31,.28),
+               0 0 10px rgba(255,31,31,.45);
+    border-color:#8a1a1a;
+  }
+  50%{
+    box-shadow:inset 0 0 14px rgba(255,31,31,.5),
+               0 0 20px rgba(255,31,31,.75);
+    border-color:#ff3b3b;
+  }
+}
+
+.header-status{
+  margin-left:auto;display:flex;align-items:center;gap:8px;
+  font-size:11px;letter-spacing:1.5px;color:var(--text-dim);
+  text-transform:uppercase;
+}
+.status-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--red-bright);
+  box-shadow:0 0 8px var(--red),0 0 16px rgba(255,31,31,.5);
+  animation:beat 1.6s ease-in-out infinite;
+}
+.status-dot.typing{
+  background:#ff8a3c;
+  box-shadow:0 0 10px #ff8a3c,0 0 22px rgba(255,138,60,.5);
+  animation:pulse 1s infinite;
+}
+@keyframes beat{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.7}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── CHAT AREA ── */
+.chat-container{
+  flex:1;display:flex;flex-direction:column;
+  max-width:900px;width:100%;margin:0 auto;
+  padding:0 20px;position:relative;z-index:1;
+}
+.messages{
+  flex:1;overflow-y:auto;padding:24px 0 16px;
+  display:flex;flex-direction:column;gap:18px;
+}
+.messages::-webkit-scrollbar{width:6px}
+.messages::-webkit-scrollbar-track{background:transparent}
+.messages::-webkit-scrollbar-thumb{
+  background:var(--red-deep);border-radius:3px;
+  box-shadow:inset 0 0 4px rgba(255,31,31,.4);
+}
+.messages::-webkit-scrollbar-thumb:hover{background:var(--red-dim)}
+
+/* ── MESSAGE glitch-in ── */
+.message{
+  display:flex;gap:12px;
+  animation:glitchIn .5s cubic-bezier(.2,.7,.2,1) both;
+  will-change:transform,filter,opacity;
+}
+@keyframes glitchIn{
+  0%{
+    opacity:0;transform:translate(-8px,4px);
+    filter:drop-shadow(5px 0 rgba(255,31,31,.9))
+           drop-shadow(-5px 0 rgba(0,255,240,.7))
+           hue-rotate(-15deg);
+    clip-path:inset(18% 0 62% 0);
+  }
+  18%{
+    opacity:.6;transform:translate(4px,-3px);
+    filter:drop-shadow(-4px 0 rgba(255,31,31,.9))
+           drop-shadow(4px 0 rgba(0,255,240,.8));
+    clip-path:inset(72% 0 8% 0);
+  }
+  36%{
+    opacity:1;transform:translate(-3px,2px);
+    filter:drop-shadow(3px 0 rgba(255,31,31,.85))
+           drop-shadow(-3px 0 rgba(0,255,240,.6));
+    clip-path:inset(0 0 0 0);
+  }
+  58%{
+    transform:translate(2px,-1px);
+    filter:drop-shadow(-2px 0 rgba(255,31,31,.6))
+           drop-shadow(2px 0 rgba(0,255,240,.4));
+  }
+  78%{
+    transform:translate(-1px,0);
+    filter:drop-shadow(1px 0 rgba(255,31,31,.35));
+  }
+  100%{
+    opacity:1;transform:translate(0,0);
+    filter:none;clip-path:inset(0 0 0 0);
+  }
+}
+
+.message-avatar{
+  width:34px;height:34px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:inherit;font-size:13px;font-weight:700;
+  border:1px solid var(--border-bright);
+  border-radius:3px;
+  background:rgba(255,31,31,.04);
+  color:var(--red-soft);
+  text-shadow:0 0 6px rgba(255,31,31,.5);
+  position:relative;
+}
+.message-avatar::before,
+.message-avatar::after{
+  content:'';position:absolute;width:5px;height:5px;
+  border-color:var(--red-bright);border-style:solid;
+  filter:drop-shadow(0 0 4px var(--red));
+}
+.message-avatar::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+.message-avatar::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+
+.message.user .message-avatar{
+  color:var(--text);
+  border-color:var(--red-dim);
+  background:rgba(255,31,31,.09);
+}
+.message.assistant .message-avatar{
+  color:#fff;
+  border-color:var(--red);
+  background:linear-gradient(180deg,rgba(255,31,31,.28),rgba(255,31,31,.08));
+  box-shadow:0 0 12px rgba(255,31,31,.35),inset 0 0 8px rgba(255,31,31,.25);
+  text-shadow:0 0 8px rgba(255,80,80,.9);
+}
+
+.message-content{flex:1;min-width:0}
+.message-sender{
+  font-size:10px;font-weight:700;letter-spacing:2px;
+  color:var(--red-soft);text-transform:uppercase;
+  margin-bottom:6px;opacity:.85;
+}
+.message.user .message-sender{color:var(--text-dim)}
+
+.message-text{
+  font-size:13.5px;line-height:1.7;
+  color:var(--text);word-wrap:break-word;
+  padding:12px 14px;
+  border:1px solid var(--border);
+  border-radius:3px;
+  background:linear-gradient(180deg,rgba(255,31,31,.025),rgba(255,31,31,.01));
+  position:relative;
+}
+.message.assistant .message-text{
+  border-color:var(--border-bright);
+  box-shadow:inset 0 0 24px rgba(255,31,31,.05);
+}
+.message-text::before{
+  content:'//';
+  position:absolute;top:-8px;left:10px;
+  background:var(--bg);padding:0 6px;
+  font-size:10px;color:var(--red-dim);letter-spacing:1px;
+}
+
+.message-text p{margin-bottom:8px}
+.message-text p:last-child{margin-bottom:0}
+.message-text code{
+  background:#1c0606;border:1px solid var(--red-deep);
+  padding:2px 7px;border-radius:2px;
+  font-size:12.5px;font-family:inherit;
+  color:#ffb37a;
+  text-shadow:0 0 6px rgba(255,140,60,.4);
+}
+.message-text pre{
+  background:#0a0202;
+  border:1px solid var(--border-bright);
+  border-radius:3px;overflow:hidden;margin:12px 0;
+  box-shadow:inset 0 0 30px rgba(255,31,31,.06),0 0 0 1px rgba(255,31,31,.05);
+}
+.message-text pre::before{
+  content:attr(data-lang);display:block;padding:6px 14px;
+  background:linear-gradient(180deg,#1c0606,#120404);
+  border-bottom:1px solid var(--border-bright);
+  font-size:10px;font-weight:700;color:var(--red-soft);
+  text-transform:uppercase;letter-spacing:1.5px;
+}
+.message-text pre code{
+  background:none!important;padding:14px!important;
+  display:block!important;overflow-x:auto;
+  font-size:12.5px!important;line-height:1.6;
+  color:#ffd7d7!important;border:0!important;border-radius:0!important;
+  text-shadow:none;
+}
+.message-text pre code .hljs-function,
+.message-text pre code .hljs-title{color:#ff8fa3}
+.message-text pre code .hljs-keyword{color:#ff5c5c;font-weight:600}
+.message-text pre code .hljs-string{color:#ffb86c}
+.message-text pre code .hljs-number{color:#ff9f43}
+.message-text pre code .hljs-comment{color:#8a5050;font-style:italic}
+.message-text pre code .hljs-built_in{color:#ffa657}
+.message-text pre code .hljs-params{color:#ffd7d7}
+.message-text pre code .hljs-attr{color:#ff7a7a}
+
+.message-text ul,.message-text ol{padding-left:22px;margin-bottom:8px}
+.message-text li{margin-bottom:4px}
+.message-text li::marker{color:var(--red-bright)}
+.message-text blockquote{
+  border-left:3px solid var(--red);
+  padding:6px 14px;color:var(--text-dim);
+  margin:10px 0;background:rgba(255,31,31,.04);
+}
+.message-text h1,.message-text h2,.message-text h3{
+  color:#fff;margin:14px 0 8px;font-size:14px;
+  letter-spacing:1px;text-transform:uppercase;
+  text-shadow:0 0 10px rgba(255,31,31,.6);
+}
+.message-text h1{font-size:16px}
+.message-text h1::before,
+.message-text h2::before,
+.message-text h3::before{content:'> ';color:var(--red-bright)}
+
+/* ── EMPTY STATE ── */
+.empty-state{
+  text-align:center;padding:70px 20px;
+  color:var(--text-dim);position:relative;
+}
+.empty-state::before,
+.empty-state::after{
+  content:'';position:absolute;width:22px;height:22px;
+  border-color:var(--red);border-style:solid;
+  filter:drop-shadow(0 0 6px var(--red));
+}
+.empty-state::before{top:40px;left:30px;border-width:1px 0 0 1px}
+.empty-state::after{bottom:40px;right:30px;border-width:0 1px 1px 0}
+.empty-icon{
+  font-size:56px;margin-bottom:18px;
+  color:var(--red-bright);
+  text-shadow:0 0 20px rgba(255,31,31,.8),0 0 40px rgba(255,31,31,.4);
+  animation:flicker 2.4s infinite steps(1);display:inline-block;
+}
+.empty-title{
+  font-size:15px;font-weight:700;letter-spacing:3px;
+  color:#fff;margin-bottom:12px;
+  text-transform:uppercase;
+  text-shadow:0 0 12px rgba(255,31,31,.7);
+}
+.empty-hint{
+  font-size:12px;max-width:440px;margin:0 auto;
+  line-height:1.7;letter-spacing:.5px;
+}
+
+/* ── INPUT ── */
+.input-area{padding:16px 0 24px;flex-shrink:0}
+.input-card{
+  background:linear-gradient(180deg,#140505,#0d0303);
+  border:1px solid var(--border-bright);
+  border-radius:3px;
+  display:flex;align-items:flex-end;
+  padding:6px 6px 6px 14px;
+  transition:border-color .2s,box-shadow .2s;
+  position:relative;
+  box-shadow:inset 0 0 24px rgba(255,31,31,.06);
+}
+.input-card::before{
+  content:'>';color:var(--red-bright);
+  font-size:16px;font-weight:700;
+  align-self:center;margin-right:8px;
+  text-shadow:var(--glow-md);
+  animation:blinkSoft 1.4s infinite;
+}
+@keyframes blinkSoft{0%,100%{opacity:1}50%{opacity:.45}}
+.input-card:focus-within{
+  border-color:var(--red);
+  box-shadow:inset 0 0 24px rgba(255,31,31,.12),
+             0 0 0 3px rgba(255,31,31,.15),
+             0 0 22px rgba(255,31,31,.25);
+}
+.input-card textarea{
+  flex:1;background:transparent;border:none;
+  color:var(--text);font-family:inherit;font-size:13.5px;
+  padding:10px 6px;resize:none;outline:none;
+  max-height:150px;line-height:1.55;letter-spacing:.3px;
+}
+.input-card textarea::placeholder{color:var(--text-mute);letter-spacing:.5px}
+.send-btn{
+  width:42px;height:42px;
+  border:1px solid var(--red);border-radius:3px;
+  background:linear-gradient(180deg,#c00,#7a0000);
+  color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;flex-shrink:0;margin-left:8px;
+  box-shadow:0 0 12px rgba(255,31,31,.5),inset 0 0 10px rgba(255,255,255,.08);
+}
+.send-btn:hover:not(:disabled){
+  background:linear-gradient(180deg,#f22,#a00);
+  box-shadow:0 0 22px rgba(255,31,31,.85),inset 0 0 12px rgba(255,255,255,.15);
+  transform:translateY(-1px);
+}
+.send-btn:active:not(:disabled){transform:translateY(0)}
+.send-btn:disabled{
+  background:linear-gradient(180deg,#2a0808,#1a0505);
+  border-color:var(--border);color:var(--text-mute);
+  cursor:not-allowed;box-shadow:none;opacity:.7;
+}
+.send-btn svg{width:18px;height:18px}
+.input-hint{
+  text-align:center;font-size:10px;color:var(--text-mute);
+  margin-top:10px;letter-spacing:1.5px;text-transform:uppercase;
+}
+.input-hint::before{content:'[ '}
+.input-hint::after{content:' ]'}
+
+/* ── Streaming cursor + decrypted tail ── */
+.stream-cursor{
+  display:inline-block;width:8px;height:15px;
+  background:var(--red-bright);
+  box-shadow:0 0 8px var(--red);
+  animation:blink .8s step-end infinite;
+  vertical-align:text-bottom;margin-left:3px;
+  border-radius:1px;
+}
+@keyframes blink{50%{opacity:0}}
+
+/* ── Responsive ── */
+@media(max-width:720px){
+  .tags{display:none}
+  .smoke{filter:blur(50px);opacity:.25}
+  .smoke.s2,.smoke.s4{display:none}
+}
+@media(max-width:640px){
+  .chat-container{padding:0 12px}
+  .header{padding:12px 16px;gap:10px}
+  .brand-title{font-size:12px;letter-spacing:1.5px}
+  .brand-tag{display:none}
+  .message-avatar{width:30px;height:30px;font-size:11px}
+  .message-text{font-size:13px;padding:10px 12px}
+  .message-text::before{font-size:9px}
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.001ms!important;
+  }
+  .smoke,.haze,.glitch-bar{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Atmosphere -->
+<div class="smoke-layer" aria-hidden="true">
+  <div class="smoke s1"></div>
+  <div class="smoke s2"></div>
+  <div class="smoke s3"></div>
+  <div class="smoke s4"></div>
+</div>
+<div class="haze" aria-hidden="true"></div>
+<div class="glitch-bar" aria-hidden="true"></div>
+<div class="glitch-bar g2" aria-hidden="true"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="brand">
+    <span class="brand-mark">&#9888;</span>
+    <span class="brand-title" data-text="Ruby">Ruby</span>
+    <span class="brand-tag">// LAB-TERMINAL v2.1</span>
+  </div>
+  <div class="tags">
+    <span class="tag tag-active">Web</span>
+    <span class="tag">Reverse</span>
+    <span class="tag">PWN</span>
+    <span class="tag">AI</span>
+  </div>
+  <div class="header-status">
+    <a href="/logout" class="back-link" title="Выйти" style="margin-left:auto">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+    Exit
+    </a>
+    <span class="status-dot" id="status-dot"></span>
+    <span id="status-text">Online</span>
+  </div>
+</div>
+
+<!-- Chat -->
+<div class="chat-container">
+  <div class="messages" id="messages">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">&#9888;</div>
+      <div class="empty-title">// SYSTEM READY</div>
+      <p class="empty-hint">Канал защищён. Введите запрос — ассистент ответит в реальном времени. Все данные сессии шифруются.</p>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-card">
+      <textarea id="chat-input" placeholder="Введите команду или запрос..." rows="1"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+    <div class="input-hint">Enter — отправить · Shift+Enter — новая строка</div>
+  </div>
+</div>
+
+<script>
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+const emptyState = document.getElementById('empty-state');
+const statusDot = document.getElementById('status-dot');
+const statusText = document.getElementById('status-text');
+
+let isStreaming = false;
+let conversationHistory = [];
+let contentEl = null;
+
+// ── Decryption stream state ──
+const DECRYPT_CHARS = '!<>-_\\/[]{}—=+*^?#01ABCDEF';
+const streamState = {
+  target: '',
+  displayed: 0,
+  scrambleWidth: 9,
+  done: false,
+  timer: null,
+  resolve: null,
+  finalizing: false
+};
+
+function randChar(){
+  return DECRYPT_CHARS[(Math.random() * DECRYPT_CHARS.length) | 0];
+}
+
+function resetStream(){
+  if (streamState.timer){ clearInterval(streamState.timer); streamState.timer = null; }
+  streamState.target = '';
+  streamState.displayed = 0;
+  streamState.done = false;
+  streamState.resolve = null;
+  streamState.finalizing = false;
+}
+
+function startDecrypt(){
+  resetStream();
+  streamState.timer = setInterval(decryptTick, 36);
+}
+
+function decryptTick(){
+  const target = streamState.target.length;
+  if (streamState.displayed < target){
+    const gap = target - streamState.displayed;
+    const step = Math.max(1, Math.ceil(gap / 12));
+    streamState.displayed = Math.min(target, streamState.displayed + step);
+  }
+  renderStreaming(false);
+
+  if (streamState.done && streamState.displayed >= target){
+    if (streamState.timer){ clearInterval(streamState.timer); streamState.timer = null; }
+    renderStreaming(true);
+    if (streamState.resolve){ const r = streamState.resolve; streamState.resolve = null; r(); }
+  }
+}
+
+function renderStreaming(final){
+  if (!contentEl) return;
+  const full = streamState.target;
+  const shown = streamState.displayed;
+
+  if (!shown && !full.length){
+    contentEl.innerHTML = '<span class="stream-cursor"></span>';
+    return;
+  }
+
+  const scrambleW = final ? 0 : streamState.scrambleWidth;
+  const scrambleStart = Math.max(0, shown - scrambleW);
+  let out = '';
+  for (let i = 0; i < shown; i++){
+    const c = full[i];
+    if (!final && i >= scrambleStart){
+      out += (c === ' ' || c === '\n' || c === '\t') ? c : randChar();
+    } else {
+      out += c;
+    }
+  }
+
+  const escaped = out
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>');
+
+  contentEl.innerHTML = escaped + '<span class="stream-cursor"></span>';
+  scrollToBottom();
+}
+
+function waitForStreamSettle(){
+  return new Promise(resolve => {
+    if (!streamState.timer && streamState.displayed >= streamState.target.length){
+      return resolve();
+    }
+    streamState.resolve = resolve;
+  });
+}
+
+// ── Auto-resize textarea ──
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 150) + 'px';
+});
+
+// ── Keyboard shortcuts ──
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    if (!isStreaming) sendMessage();
+  }
+});
+
+inputEl.addEventListener('focus', checkInput);
+inputEl.addEventListener('blur', checkInput);
+
+function checkInput(){
+  sendBtn.disabled = !inputEl.value.trim() || isStreaming;
+}
+
+// ── Markdown & syntax highlighting ──
+function initMarkdown(){
+  marked.setOptions({
+    gfm: true,
+    breaks: true,
+    headerIds: false,
+    mangle: false
+  });
+
+  const renderer = new marked.Renderer();
+  renderer.code = (code, language) => {
+    const lang = language || 'text';
+    let highlighted;
+    try {
+      highlighted = lang !== 'text'
+        ? hljs.highlight(code, { language: lang, ignoreIllegals: true }).value
+        : code;
+    } catch {
+      highlighted = code;
+    }
+    return `<pre data-lang="${lang}"><code class="hljs language-${lang}">${highlighted}</code></pre>`;
+  };
+  marked.setOptions({ renderer });
+}
+
+if (typeof hljs !== 'undefined') initMarkdown();
+else window.addEventListener('load', initMarkdown);
+
+// ── Add message to UI ──
+function addMessage(role, content){
+  emptyState.style.display = 'none';
+
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+
+  const userAvatar = `&gt;`;
+  const botAvatar  = `Ruby`;
+  const avatar = role === 'user' ? userAvatar : botAvatar;
+  const sender = role === 'user' ? 'user@lab:~$' : 'ai@core:~$';
+
+  let renderedContent = '';
+  if (role === 'assistant'){
+    renderedContent = '';
+  } else {
+    renderedContent = content.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+  }
+
+  div.innerHTML = `
+    <div class="message-avatar">${avatar}</div>
+    <div class="message-content">
+      <div class="message-sender">${sender}</div>
+      <div class="message-text">${renderedContent}</div>
+    </div>
+  `;
+
+  messagesEl.appendChild(div);
+  scrollToBottom();
+  return div;
+}
+
+function scrollToBottom(){
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function showTyping(){
+  statusDot.className = 'status-dot typing';
+  statusText.textContent = 'Processing...';
+}
+function hideTyping(){
+  statusDot.className = 'status-dot';
+  statusText.textContent = 'Online';
+}
+
+// ── Финальный рендер: iframe как есть, остальное через marked ──
+function renderAssistantContent(text){
+  if (!text) return '';
+
+  const hasIframe = /<iframe[\s>]/i.test(text);
+
+  if (hasIframe){
+    const iframeRe = /<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi;
+    const matches = [...text.matchAll(iframeRe)];
+
+    if (matches.length === 0){
+      return `<pre data-lang="html"><code>${escapeHtml(text)}</code></pre>`;
+    }
+
+    const iframes = matches.map(m => normalizeIframe(m[0])).join('\n');
+
+    let rest = text;
+    matches.forEach(m => { rest = rest.replace(m[0], ''); });
+    rest = rest.trim();
+
+    return `
+      ${rest ? `<div class="message-plain">${escapeHtml(rest)}</div>` : ''}
+      <div class="chat-iframe-wrap">${iframes}</div>
+    `;
+  }
+
+  return marked.parse(text);
+}
+
+function normalizeIframe(tag){
+  let srcdoc = null;
+
+  const dbl = tag.match(/\bsrcdoc\s*=\s*"([\s\S]*?)"\s*(?=[\w-]+\s*=|\/?>)/i);
+  if (dbl) srcdoc = dbl[1];
+  else {
+    const sgl = tag.match(/\bsrcdoc\s*=\s*'([\s\S]*?)'\s*(?=[\w-]+\s*=|\/?>)/i);
+    if (sgl) srcdoc = sgl[1];
+  }
+
+  if (srcdoc == null) return tag;
+
+  srcdoc = srcdoc
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+
+  const CLOSE_TAG = '</scr' + 'ipt>';
+  const CLOSE_ESC = '<\\/scr' + 'ipt>';
+  srcdoc = srcdoc.split(CLOSE_TAG).join(CLOSE_ESC);
+
+  srcdoc = srcdoc.replace(/'/g, '"');
+
+  const attrsMatch = tag.match(/<iframe\b([\s\S]*?)>/i);
+  let attrs = attrsMatch ? attrsMatch[1] : '';
+  attrs = attrs
+    .replace(/\bsrcdoc\s*=\s*"[\s\S]*?"\s*/i, '')
+    .replace(/\bsrcdoc\s*=\s*'[\s\S]*?'\s*/i, '')
+    .trim();
+
+  return `<iframe srcdoc='${srcdoc}' ${attrs}></iframe>`;
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ── Send message (non-streaming, /chat) ──
+async function sendMessage(){
+  const text = inputEl.value.trim();
+  if (!text || isStreaming) return;
+
+  isStreaming = true;
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  sendBtn.disabled = true;
+
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+
+  showTyping();
+
+  const assistantMsg = addMessage('assistant', '');
+  contentEl = assistantMsg.querySelector('.message-text');
+  contentEl.innerHTML = '<span class="stream-cursor"></span>';
+
+  startDecrypt();
+
+  let fullResponse = '';
+
+  try {
+    const response = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, history: conversationHistory })
+    });
+
+    if (!response.ok){
+      const err = await response.json().catch(() => ({ error: 'HTTP ' + response.status }));
+      streamState.done = true;
+      await waitForStreamSettle();
+      contentEl.innerHTML = `<span style="color:#ff3b3b">⚠ ${err.error || 'Ошибка сервера'}</span>`;
+      hideTyping();
+      isStreaming = false;
+      inputEl.focus();
+      checkInput();
+      return;
+    }
+
+    const data = await response.json();
+
+    if (data.type === 'error'){
+      streamState.done = true;
+      await waitForStreamSettle();
+      contentEl.innerHTML = `<span style="color:#ff3b3b">⚠ ${data.error || 'Ошибка агента'}</span>`;
+      hideTyping();
+      isStreaming = false;
+      inputEl.focus();
+      checkInput();
+      return;
+    }
+
+    fullResponse = data.text || '';
+    streamState.target = fullResponse;
+    streamState.done = true;
+
+    await waitForStreamSettle();
+
+    if (fullResponse){
+      contentEl.innerHTML = renderAssistantContent(fullResponse);
+    }
+
+    if (Array.isArray(data.history)){
+      conversationHistory = data.history;
+    } else {
+      conversationHistory.push({ role: 'assistant', content: fullResponse });
+    }
+
+  } catch (err){
+    streamState.done = true;
+    await waitForStreamSettle();
+    contentEl.innerHTML = `<span style="color:#ff3b3b">⚠ ${err.message}</span>`;
+  }
+
+  hideTyping();
+  isStreaming = false;
+  contentEl = null;
+  inputEl.focus();
+  checkInput();
+}
+</script>
+</body>
+</html>

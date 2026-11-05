@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Idea | Voting Forum</title>
+    <link rel="stylesheet" href="/static/main.css">
+</head>
+<body>
+    <div class="site-wrap stack">
+        <header class="forum-banner">
+            <div>
+                <h1>МОЯ ИДЕЯ</h1>
+                <p class="tagline">Раунд #{{ current_round }}</p>
+            </div>
+            <div class="pixel-logo" aria-hidden="true"><div class="pixel-sprite"></div></div>
+        </header>
+
+        <nav class="topbar">
+            <span class="muted">участник: <strong>{{ user.username }}</strong></span>
+            <form method="GET" action="/">
+                <button class="button-ghost" type="submit">Вернуться на форум</button>
+            </form>
+        </nav>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="panel">
+            <div class="panel-head"><h2>Слот идеи</h2></div>
+            <div class="panel-body">
+                {% if my_suggestion %}
+                    <article class="thread">
+                        <div class="thread-head">
+                            <span>ваш ожидающий пост</span>
+                            <span class="meta">{{ my_suggestion.created_at }}</span>
+                        </div>
+                        <div class="thread-body">{{ my_suggestion.content }}</div>
+                        <div class="thread-foot">
+                            <span class="muted">вы можете удалить до конца раунда.</span>
+                            <div class="actions-inline">
+                                {% if my_suggestion.view_key %}
+                                    <form method="GET" action="/views/{{ my_suggestion.view_key }}">
+                                        <button type="submit">Кто смотрел</button>
+                                    </form>
+                                {% endif %}
+                                <form method="POST" action="/suggest/{{ my_suggestion.id }}/delete">
+                                    <button class="btn-hot" type="submit">Удалить идею</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% if my_suggestion.view_key %}
+                            <p class="muted" style="padding: 0 10px 10px;">
+                                Журнал просмотров не выводится на общую доску. Ссылку видите только вы:
+                                <code>/views/{{ my_suggestion.view_key }}</code>
+                            </p>
+                        {% endif %}
+                    </article>
+                {% else %}
+                    <form method="POST" action="/suggest">
+                        <label class="field">
+                            <span>Текст идеи (макс. 500 символов)</span>
+                            <textarea name="content" maxlength="500" placeholder="Продолжите историю..."></textarea>
+                        </label>
+                        <button type="submit">Опубликовать идею</button>
+                    </form>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</body>
+</html>

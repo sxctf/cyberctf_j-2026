@@ -1,0 +1,24 @@
+services:
+
+  challenge-lfi:
+    build: ./challenge-1
+    container_name: ctf-lfi
+    ports:
+      - "5050:5000"
+    volumes:
+      - ./logs/lfi:/data          
+    environment:
+      - LOG_DB=/data/userlog.db
+    restart: unless-stopped
+
+
+  challenge-traversal:
+    build: ./challenge-2
+    container_name: ctf-traversal
+    ports:
+      - "5051:5000"
+    volumes:
+      - ./logs/traversal:/data    
+    environment:
+      - LOG_DB=/data/userlog.db
+    restart: unless-stopped

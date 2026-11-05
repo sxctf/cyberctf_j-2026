@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting Forum</title>
+    <link rel="stylesheet" href="/static/main.css">
+</head>
+<body>
+    <div class="site-wrap stack">
+        <header class="forum-banner">
+            <div>
+                <h1>ГОЛОСОВАНИЕ</h1>
+                <p class="tagline">Форум для голосования</p>
+            </div>
+            <div class="pixel-logo" aria-hidden="true"><div class="pixel-sprite"></div></div>
+        </header>
+
+        <nav class="topbar">
+            <div class="topbar-meta">
+                <span class="chip">РАУНД #{{ current_round }}</span>
+                {% if user %}
+                    <span class="muted">вход выполнен как <strong>{{ user.username }}</strong></span>
+                {% else %}
+                    <span class="muted">гостевой режим</span>
+                {% endif %}
+            </div>
+            <div class="actions-inline">
+                <form method="GET" action="/vote">
+                    <button class="btn-gold" type="submit">Голосовать</button>
+                </form>
+                {% if user %}
+                    <form method="GET" action="/suggest/new">
+                        <button type="submit">Моя идея</button>
+                    </form>
+                    <form method="POST" action="/logout">
+                        <button class="button-ghost" type="submit">Выход</button>
+                    </form>
+                {% else %}
+                    <form method="GET" action="/login">
+                        <button type="submit">Вход</button>
+                    </form>
+                    <form method="GET" action="/register">
+                        <button class="button-ghost" type="submit">Регистрация</button>
+                    </form>
+                {% endif %}
+            </div>
+        </nav>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2>Текущая история</h2>
+            </div>
+            <div class="panel-body">
+                <pre class="story-box">{{ story }}</pre>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2>Идеи в этом раунде</h2>
+                <span class="muted">1 vote / visitor / round</span>
+            </div>
+            <div class="panel-body">
+                <p class="muted">
+                    {% if not user %}
+                        Голосуйте за продолжение истории.
+                    {% elif voted_this_round %}
+                        Ваш голос за этот раунд уже учтен.
+                    {% elif user_has_suggestion %}
+                        Вы уже опубликовали идею в этом раунде. Управляйте ей в Моей идее.
+                    {% else %}
+                        Выберите идею и проголосуйте за нее.
+                    {% endif %}
+                </p>
+                {% if suggestions %}
+                    {% for item in suggestions %}
+                        <article class="thread">
+                            <div class="thread-head">
+                                <span>by {{ item.username }}</span>
+                                <span class="vote-count">{{ item.vote_count }} UP</span>
+                            </div>
+                            <div class="thread-body">{{ item.content }}</div>
+                            <div class="thread-foot">
+                                <span class="meta">{{ item.created_at }}</span>
+                                {% if user and not voted_this_round %}
+                                    <form class="actions-inline" method="POST" action="/vote/{{ item.id }}">
+                                        <button class="btn-vote" type="submit">Голосовать</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <p class="muted">В этом раунде еще нет ни одной идеи.</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2>История победителей</h2>
+            </div>
+            <div class="panel-body">
+                {% if history %}
+                    {% for row in history %}
+                        <article class="thread">
+                            <div class="thread-head">
+                                <span>Round {{ row.round_number }}</span>
+                                <span class="meta">{{ row.selected_at }}</span>
+                            </div>
+                            <div class="thread-body">{{ row.selected_text }}</div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <p class="muted">История пуста. Будьте первым.</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <footer class="forum-footer">
+            ГОЛОСОВАНИЕ
+        </footer>
+    </div>
+</body>
+</html>

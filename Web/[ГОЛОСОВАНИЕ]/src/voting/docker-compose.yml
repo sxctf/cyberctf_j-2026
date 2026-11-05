@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  web:
+    build: ./app
+    ports:
+      - "5001:5000"
+    environment:
+      - SECRET_KEY=ctf-local-secret
+      - ROUND_INTERVAL_SECONDS=300
+    volumes:
+      - ./app:/app
+    networks:
+      - voting-net
+
+  bot:
+    build: ./bot
+    environment:
+      - FLAG=${FLAG:-flag{THIS_IS_FAKE_FLAG}}
+    depends_on:
+      - web
+    networks:
+      - voting-net
+
+networks:
+  voting-net:
+    driver: bridge

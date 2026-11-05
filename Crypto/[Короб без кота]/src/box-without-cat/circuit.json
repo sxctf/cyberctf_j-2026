@@ -1,0 +1,181 @@
+{
+  "n_qubits": 12,
+  "operations": [
+    {
+      "gate": "cx",
+      "qubits": [
+        4,
+        5
+      ]
+    },
+    {
+      "gate": "x",
+      "qubits": [
+        9
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        4,
+        7
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        5,
+        8
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        0,
+        3
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        3,
+        6
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        1,
+        8
+      ]
+    },
+    {
+      "gate": "x",
+      "qubits": [
+        2
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        0,
+        4
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        1,
+        4
+      ]
+    },
+    {
+      "gate": "t",
+      "qubits": [
+        4
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        1,
+        4
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        0,
+        4
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        3,
+        9
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        6,
+        9
+      ]
+    },
+    {
+      "gate": "tdg",
+      "qubits": [
+        9
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        6,
+        9
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        3,
+        9
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        1,
+        7
+      ]
+    },
+    {
+      "gate": "t",
+      "qubits": [
+        7
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        1,
+        7
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        0,
+        9
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        8,
+        9
+      ]
+    },
+    {
+      "gate": "tdg",
+      "qubits": [
+        9
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        8,
+        9
+      ]
+    },
+    {
+      "gate": "cx",
+      "qubits": [
+        0,
+        9
+      ]
+    }
+  ]
+}

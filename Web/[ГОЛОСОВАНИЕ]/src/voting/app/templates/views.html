@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотры идеи | ГОЛОСОВАНИЕ</title>
+    <link rel="stylesheet" href="/static/main.css">
+</head>
+<body>
+    <div class="site-wrap stack">
+        <header class="forum-banner">
+            <div>
+                <h1>ПРОСМОТРЫ ИДЕИ</h1>
+                <p class="tagline">скрытый журнал // кто открывал материал по ссылке автора</p>
+            </div>
+            <div class="pixel-logo" aria-hidden="true"><div class="pixel-sprite"></div></div>
+        </header>
+
+        <nav class="topbar">
+            <span class="muted">ссылка не публикуется на общей доске</span>
+            <form method="GET" action="/">
+                <button class="button-ghost" type="submit">Вернуться на форум</button>
+            </form>
+        </nav>
+
+        <section class="panel">
+            <div class="panel-head"><h2>Идея</h2></div>
+            <div class="panel-body">
+                <div class="thread-body">{{ suggestion.content }}</div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head"><h2>Отметиться</h2></div>
+            <div class="panel-body">
+                <p class="muted">Можно оставить имя или короткий комментарий — автор увидит, что вы заходили.</p>
+                <form method="POST" action="/views/{{ view_key }}">
+                    <label class="field">
+                        <span>Кто смотрел</span>
+                        <input name="viewer" type="text" maxlength="2000" placeholder="ник или заметка">
+                    </label>
+                    <button type="submit">Записать просмотр</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head"><h2>Журнал</h2></div>
+            <div class="panel-body">
+                {% if visitors %}
+                    {% for row in visitors %}
+                        <article class="thread">
+                            <div class="thread-head">
+                                <span>просмотр</span>
+                                <span class="meta">{{ row.created_at }}</span>
+                            </div>
+                            <div class="thread-body">{{ row.viewer }}</div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <p class="muted">Пока никто не отмечался.</p>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</body>
+</html>

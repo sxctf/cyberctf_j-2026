@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вход // LAB-TERMINAL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080202;--panel:#140505;--border:#2a0808;--border-bright:#4a0d0d;
+  --red:#ff1f1f;--red-bright:#ff3b3b;--red-soft:#ff7a7a;--red-dim:#8a2020;--red-deep:#4a0808;
+  --text:#ffcccc;--text-dim:#a86a6a;--text-mute:#6b3a3a;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,31,31,.10),transparent 55%),linear-gradient(180deg,#080202,#0a0303);
+  color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;
+}
+.card{
+  background:linear-gradient(180deg,#140505,#0d0303);border:1px solid var(--border-bright);
+  border-radius:3px;padding:32px 28px;width:100%;max-width:380px;
+  box-shadow:inset 0 0 24px rgba(255,31,31,.06),0 8px 32px rgba(0,0,0,.7);
+}
+.brand{text-align:center;margin-bottom:24px}
+.brand h1{
+  font-size:16px;font-weight:700;letter-spacing:3px;color:var(--red-soft);
+  text-transform:uppercase;text-shadow:0 0 12px rgba(255,31,31,.6);
+}
+.brand span{font-size:11px;color:var(--text-mute);letter-spacing:1px}
+label{
+  display:block;font-size:10px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--red-soft);margin-bottom:6px;
+}
+label::before{content:'> ';color:var(--red-bright)}
+input[type="text"],input[type="password"]{
+  width:100%;background:#0a0202;border:1px solid var(--border-bright);
+  border-radius:3px;color:var(--text);padding:10px 12px;
+  font-size:13px;font-family:inherit;transition:border-color .2s,box-shadow .2s;margin-bottom:16px;
+}
+input::placeholder{color:var(--text-mute)}
+input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 2px rgba(255,31,31,.12),inset 0 0 12px rgba(255,31,31,.06)}
+button.submit{
+  width:100%;padding:11px;background:linear-gradient(180deg,#7a0000,#4a0000);
+  color:#fff;border:1px solid var(--red);border-radius:3px;
+  font-family:inherit;font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;cursor:pointer;transition:all .2s;
+  box-shadow:0 0 12px rgba(255,31,31,.25),inset 0 0 10px rgba(255,255,255,.05);
+}
+button.submit:hover:not(:disabled){
+  background:linear-gradient(180deg,#c00,#7a0000);
+  box-shadow:0 0 20px rgba(255,31,31,.55),inset 0 0 12px rgba(255,255,255,.1);
+}
+button.submit:disabled{background:#1a0505;color:var(--text-mute);border-color:var(--border);cursor:not-allowed;opacity:.6}
+.error-msg{
+  background:rgba(255,31,31,.12);border:1px solid var(--red-dim);
+  border-radius:3px;padding:10px 12px;margin-bottom:16px;
+  font-size:12px;color:#ff7a7a;text-align:center;
+}
+.footer{text-align:center;margin-top:18px;font-size:11px;color:var(--text-mute)}
+.footer a{color:var(--red-soft);text-decoration:none;border-bottom:1px solid var(--border-bright)}
+.footer a:hover{color:#fff;border-color:var(--red)}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <h1>&#9888; LAB-TERMINAL</h1>
+    <span>авторизация</span>
+  </div>
+
+  {% if error %}
+  <div class="error-msg">&#10060; {{ error }}</div>
+  {% endif %}
+
+  <form method="post" autocomplete="off">
+    <label for="username">Имя пользователя</label>
+    <input type="text" id="username" name="username" placeholder="user" required autofocus>
+
+    <label for="password">Пароль</label>
+    <input type="password" id="password" name="password" placeholder="••••••" required>
+
+    <button type="submit" class="submit">Войти</button>
+  </form>
+
+  <div class="footer">
+    Нет аккаунта? <a href="/register">Зарегистрироваться</a>
+  </div>
+</div>
+</body>
+</html>

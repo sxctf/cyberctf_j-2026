@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Recent Skills</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070f;
+  --card:rgba(17,22,40,.7);
+  --card-2:rgba(13,17,32,.85);
+  --border:rgba(120,150,220,.08);
+  --border-hover:rgba(120,150,220,.18);
+  --text:#e8ecf5;
+  --text-dim:#8b93a8;
+  --text-mute:#5a6178;
+  --cyan:#22d3ee;
+  --blue:#3b82f6;
+  --violet:#8b5cf6;
+  --orange:#fb923c;
+  --radius:16px;
+  --radius-sm:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 700px 500px at 100% 60%, rgba(251,146,60,.14), transparent 65%),
+    radial-gradient(ellipse 600px 500px at 100% 100%, rgba(251,90,60,.10), transparent 65%),
+    radial-gradient(ellipse 900px 700px at 0% 0%, rgba(59,130,246,.10), transparent 60%),
+    radial-gradient(ellipse 700px 600px at 60% 20%, rgba(139,92,246,.06), transparent 65%);
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(120,150,220,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,150,220,.025) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse at 50% 40%,#000 20%,transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 20%,transparent 75%);
+}
+
+.app{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:72px 1fr;
+  min-height:100vh;
+  max-width:1400px;
+  margin:0 auto;
+  padding:20px;
+  gap:20px;
+}
+
+/* Sidebar */
+.sidebar{
+  display:flex;flex-direction:column;align-items:center;
+  background:linear-gradient(180deg,rgba(17,22,40,.85),rgba(10,14,26,.85));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px 0;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 8px 40px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.nav-icon{
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:12px;
+  color:var(--text-mute);
+  cursor:pointer;
+  position:relative;
+  transition:color .2s,background .2s,transform .2s;
+  text-decoration:none;
+}
+.nav-icon svg{width:20px;height:20px;stroke-width:1.8}
+.nav-icon:hover{
+  color:var(--text);
+  background:rgba(120,150,220,.06);
+  transform:translateY(-1px);
+}
+.nav-icon.active{
+  color:#fff;
+  background:linear-gradient(180deg,rgba(59,130,246,.35),rgba(59,130,246,.15));
+  box-shadow:0 0 20px rgba(59,130,246,.4),inset 0 0 12px rgba(59,130,246,.2);
+}
+.nav-icon.active::before{
+  content:'';position:absolute;left:-18px;top:50%;transform:translateY(-50%);
+  width:3px;height:20px;border-radius:0 3px 3px 0;
+  background:var(--blue);
+  box-shadow:0 0 10px var(--blue);
+}
+
+/* Main */
+.main{display:flex;flex-direction:column;gap:20px;min-width:0}
+
+/* Card */
+.card{
+  background:linear-gradient(180deg,var(--card),var(--card-2));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px;
+  position:relative;
+  overflow:hidden;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.03);
+  transition:border-color .25s,transform .25s,box-shadow .25s;
+}
+.card:hover{
+  border-color:var(--border-hover);
+  box-shadow:0 12px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+/* Skills list */
+.card--skills{min-height:400px}
+.slot-title{
+  font-size:14px;font-weight:600;color:#fff;
+  margin-bottom:6px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.slot-title .dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 10px var(--cyan);
+}
+.slot-title .dot--cyan{background:var(--cyan)!important;box-shadow:0 0 10px var(--cyan)!important}
+
+.skills-list{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.skill-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:#0a0e1a;border:1px solid var(--border);
+  border-radius:8px;font-size:13px;transition:border-color .2s;
+}
+.skill-item:hover{border-color:var(--border-hover)}
+.skill-info{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.skill-name{color:var(--text);font-weight:500;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.skill-time{color:var(--text-mute);font-size:11px;font-family:'JetBrains Mono',monospace}
+.badge{
+  display:inline-block;padding:4px 12px;border-radius:999px;font-size:10px;
+  font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+}
+.badge-success{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
+.badge-rejected{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.badge-pending{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.3)}
+.empty-state{
+  text-align:center;padding:40px;color:var(--text-mute);font-size:13px;
+}
+
+/* Responsive */
+@media(max-width:760px){
+  .app{grid-template-columns:1fr;padding:12px;gap:12px}
+  .sidebar{
+    flex-direction:row;
+    padding:8px 12px;
+    border-radius:var(--radius);
+    overflow-x:auto;
+  }
+  .nav-icon.active::before{display:none}
+  .greeting-name{font-size:24px}
+  .card{padding:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <a href="/admin" class="nav-icon" title="Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+    </a>
+    <a href="/admin/skills" class="nav-icon active" title="Recent Skills">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    </a>
+  </aside>
+
+  <main class="main">
+    <section class="card card--skills">
+      <div class="slot-title">Recent Skills<span class="dot dot--cyan"></span></div>
+      <div class="skills-list">
+        {% if recent %}
+          {% for s in recent %}
+          <div class="skill-item">
+            <div class="skill-info">
+              <span class="skill-name" title="{{ s.name }}">{{ s.name }}</span>
+            </div>
+            <span class="badge badge-{{ s.status }}">{{ s.status_text }}</span>
+            <span class="skill-time">{{ s.registered_at }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">No skills uploaded yet</div>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

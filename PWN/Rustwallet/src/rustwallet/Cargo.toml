@@ -1,0 +1,12 @@
+[package]
+name = "rustwallet"
+version = "1.4.2"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+sha2 = "0.10"
+base64 = "0.22"
+
+[profile.release]
+opt-level = 2

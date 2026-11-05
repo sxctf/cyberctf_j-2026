@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  chat:
+    build:
+      context: ./chat
+      dockerfile: Dockerfile
+    hostname: chat-service
+    ports:
+      - 8000:5000
+    volumes:
+      - ./chat/data:/app/data
+      - ./chat/tmp:/app/tmp
+    networks:
+      - public
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    hostname: admin-service
+    depends_on:
+      - chat
+    networks:
+      - private
+    secrets:
+    - source: flag
+      target: /flag
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    depends_on:
+      - admin
+    networks:
+      - public
+      - private
+
+networks:
+  public:
+  private:
+
+secrets:
+  flag:
+    environment: "FLAG" 
+

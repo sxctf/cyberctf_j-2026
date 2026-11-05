@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Lab | Voting Forum</title>
+    <link rel="stylesheet" href="/static/main.css">
+</head>
+<body>
+    <div class="site-wrap stack">
+        <header class="forum-banner">
+            <div>
+                <h1>ЛАБОРАТОРИЯ ИДЕЙ</h1>
+                <p class="tagline">отправьте идею</p>
+            </div>
+            <div class="pixel-logo" aria-hidden="true"><div class="pixel-sprite"></div></div>
+        </header>
+
+        <nav class="topbar">
+            <span class="muted">экспериментальная доска</span>
+            <form method="GET" action="/">
+                <button class="button-ghost" type="submit">Вернуться на форум</button>
+            </form>
+        </nav>
+
+        <section class="panel">
+            <div class="panel-head"><h2>Форма контакта</h2></div>
+            <div class="panel-body">
+                <form>
+                    <label class="field">
+                        <span>Имя</span>
+                        <input name="user_first_name" value="{{ firstname|safe }}">
+                    </label>
+                    <label class="field">
+                        <span>Фамилия</span>
+                        <input name="user_last_name" value="{{ lastname|safe }}">
+                    </label>
+                    <label class="field">
+                        <span>Почта</span>
+                        <input id="email" name="email" value="{{ email|safe }}">
+                    </label>
+                </form>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head"><h2>Предпросмотр почты</h2></div>
+            <div class="panel-body">
+                <span id="selected_email" class="muted">нет</span>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+    <script src="/static/subscribe.js"></script>
+</body>
+</html>

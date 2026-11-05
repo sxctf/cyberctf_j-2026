@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: ./app
+    environment:
+      FLAG: ${FLAG:-flag{THIS_IS_FAKE_FLAG}}
+    expose:
+      - "8000"
+
+  coraza-spoa:
+    image: ghcr.io/corazawaf/coraza-spoa:main
+    command: ["/coraza-spoa", "--config", "/etc/coraza-spoa.yaml"]
+    volumes:
+      - ./coraza/coraza-spoa.yaml:/etc/coraza-spoa.yaml:ro
+    expose:
+      - "9000"
+
+  haproxy:
+    build:
+      context: ./haproxy
+    ports:
+      - "8443:8443"
+    depends_on:
+      - app
+      - coraza-spoa

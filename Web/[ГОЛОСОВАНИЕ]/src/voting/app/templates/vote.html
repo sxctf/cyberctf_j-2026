@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote Board | Voting Forum</title>
+    <link rel="stylesheet" href="/static/main.css">
+</head>
+<body>
+    <div class="site-wrap stack">
+        <header class="forum-banner">
+            <div>
+                <h1>ГОЛОСОВАНИЕ</h1>
+                <p class="tagline">Раунд #{{ current_round }}</p>
+            </div>
+            <div class="pixel-logo" aria-hidden="true"><div class="pixel-sprite"></div></div>
+        </header>
+
+        <nav class="topbar">
+            <span class="muted">
+                {% if user %}участник: <strong>{{ user.username }}</strong>{% else %}гость{% endif %}
+            </span>
+            <div class="actions-inline">
+                <form method="GET" action="/">
+                    <button class="button-ghost" type="submit">Вернуться на форум</button>
+                </form>
+            </div>
+        </nav>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2>Проголосуйте за идею</h2>
+            </div>
+            <div class="panel-body">
+                {% if voted_this_round %}
+                    <p class="muted">Вы уже проголосовали в текущем раунде.</p>
+                {% else %}
+                    <p class="muted">Выберите одну идею и нажмите "Проголосовать".</p>
+                {% endif %}
+
+                {% if suggestions %}
+                    {% for item in suggestions %}
+                        <article class="thread">
+                            <div class="thread-head">
+                                <span>от {{ item.username }}</span>
+                                <span class="vote-count">{{ item.vote_count }} UP</span>
+                            </div>
+                            <div class="thread-body">{{ item.content }}</div>
+                            <div class="thread-foot">
+                                <span class="meta">{{ item.created_at }}</span>
+                                {% if not voted_this_round %}
+                                    <form class="actions-inline" method="POST" action="/vote/{{ item.id }}">
+                                        <button class="btn-vote" type="submit">Голосовать</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <p class="muted">Идей для голосования еще нет.</p>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</body>
+</html>

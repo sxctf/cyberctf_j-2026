@@ -1,0 +1,6 @@
+{
+    "name": "Temperature Converter",
+    "description": "Converts temperature between Celsius, Fahrenheit, and Kelvin scales",
+    "version": "1.0",
+    "main_file": "converter.py"
+}

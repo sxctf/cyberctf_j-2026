@@ -1,0 +1,4 @@
+.git
+.gitignore
+target
+vendor/stm32-emulator/stm32-emulator-main/target
