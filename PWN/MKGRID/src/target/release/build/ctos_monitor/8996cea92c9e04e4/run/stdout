@@ -1,0 +1,5 @@
+cargo:rustc-link-search=native=/Users/andrey/Desktop/CTF-8-J/PWN/MKGRID/src/ctos_lib
+cargo:rustc-link-lib=dylib=ctos
+cargo:rustc-link-arg=-Wl,-rpath,/Users/andrey/Desktop/CTF-8-J/PWN/MKGRID/src/ctos_lib
+cargo:rerun-if-changed=/Users/andrey/Desktop/CTF-8-J/PWN/MKGRID/src/ctos_lib/libctos.c
+cargo:rerun-if-changed=/Users/andrey/Desktop/CTF-8-J/PWN/MKGRID/src/ctos_lib/libctos.so

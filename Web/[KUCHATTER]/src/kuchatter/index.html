@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PulseMirror</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" aria-label="Workspace navigation">
+        <div class="brand">
+          <div class="brand-mark">PM</div>
+          <div>
+            <strong>PulseMirror</strong>
+            <span>Social intelligence</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Primary">
+          <button class="active" type="button" data-view="live">Live Feed</button>
+          <button type="button" data-view="profiles">Profiles</button>
+          <button type="button" data-view="mentions">Mentions</button>
+          <button type="button" data-view="watchlists">Watchlists</button>
+          <button type="button" data-view="archive">Archive Vault</button>
+        </nav>
+
+        <div class="workspace-card">
+          <span>Workspace</span>
+          <strong>TI Europe Desk</strong>
+          <p>32 watched accounts</p>
+        </div>
+
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="view-eyebrow">Live social overview</p>
+            <h1 id="view-title">Pulse stream</h1>
+          </div>
+          <div class="top-actions">
+            <label class="search-box" for="search-input">
+              <span>Search</span>
+              <input id="search-input" type="search" placeholder="@handle, keyword, post id">
+            </label>
+            <button class="import-button" id="open-import" type="button">Import archive</button>
+          </div>
+        </header>
+
+        <section class="view active" data-view-panel="live">
+          <div class="content-grid">
+            <section class="feed" aria-labelledby="feed-title">
+              <div class="section-header">
+                <div>
+                  <h2 id="feed-title">Monitored posts</h2>
+                  <p>Latest indexed activity across selected public accounts.</p>
+                </div>
+                <button class="quiet-button" type="button" data-action="refresh-feed">Refresh</button>
+              </div>
+
+              <article class="post-card">
+                <div class="avatar blue">MO</div>
+                <div class="post-body">
+                  <div class="post-meta">
+                    <strong>Mira Operations</strong>
+                    <span>@mira_ops · 4m</span>
+                  </div>
+                  <p>Maintenance window completed. Access restored for all regional dashboards.</p>
+                  <div class="metrics">
+                    <span>18 likes</span>
+                    <span>4 shares</span>
+                    <span>risk low</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="post-card">
+                <div class="avatar green">LC</div>
+                <div class="post-body">
+                  <div class="post-meta">
+                    <strong>Lattice Comms</strong>
+                    <span>@lattice_watch · 22m</span>
+                  </div>
+                  <p>New access-control firmware referenced in partner thread. Monitoring replies.</p>
+                  <div class="metrics">
+                    <span>41 likes</span>
+                    <span>12 shares</span>
+                    <span>risk medium</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="post-card">
+                <div class="avatar amber">SB</div>
+                <div class="post-body">
+                  <div class="post-meta">
+                    <strong>Signal Bridge</strong>
+                    <span>@bridge_signal · 39m</span>
+                  </div>
+                  <p>Archive sync queue delayed. Legacy exports will be retried after parser rotation.</p>
+                  <div class="metrics">
+                    <span>9 likes</span>
+                    <span>2 shares</span>
+                    <span>risk low</span>
+                  </div>
+                </div>
+              </article>
+            </section>
+
+            <aside class="insights" aria-label="Insights">
+              <section class="profile-card">
+                <div class="profile-top">
+                  <div class="avatar large blue">MO</div>
+                  <div>
+                    <h2>Mira Operations</h2>
+                    <p>@mira_ops</p>
+                  </div>
+                </div>
+                <dl class="profile-stats">
+                  <div>
+                    <dt>Network</dt>
+                    <dd>Chatter</dd>
+                  </div>
+                  <div>
+                    <dt>Mentions</dt>
+                    <dd>142</dd>
+                  </div>
+                  <div>
+                    <dt>Risk</dt>
+                    <dd>Low</dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section class="trend-card">
+                <h2>Trending entities</h2>
+                <ul>
+                  <li><span>access-control</span><strong>+18%</strong></li>
+                  <li><span>firmware</span><strong>+11%</strong></li>
+                  <li><span>legacy-export</span><strong>+7%</strong></li>
+                </ul>
+              </section>
+
+              <section class="response-card">
+                <h2>Archive import result</h2>
+                <pre id="import-result">No archive imported in this session.</pre>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="profiles">
+          <div class="records-grid">
+            <article class="record-card">
+              <div class="profile-top">
+                <div class="avatar large blue">MO</div>
+                <div>
+                  <h2>Mira Operations</h2>
+                  <p>@mira_ops · Chatter</p>
+                </div>
+              </div>
+              <p class="record-copy">Operations channel for regional service updates and maintenance notices.</p>
+              <dl class="profile-stats">
+                <div><dt>Posts</dt><dd>428</dd></div>
+                <div><dt>Mentions</dt><dd>142</dd></div>
+                <div><dt>Risk</dt><dd>Low</dd></div>
+              </dl>
+            </article>
+
+            <article class="record-card">
+              <div class="profile-top">
+                <div class="avatar large green">LC</div>
+                <div>
+                  <h2>Lattice Comms</h2>
+                  <p>@lattice_watch · Threadline</p>
+                </div>
+              </div>
+              <p class="record-copy">Vendor-adjacent account frequently referencing embedded firmware releases.</p>
+              <dl class="profile-stats">
+                <div><dt>Posts</dt><dd>211</dd></div>
+                <div><dt>Mentions</dt><dd>86</dd></div>
+                <div><dt>Risk</dt><dd>Medium</dd></div>
+              </dl>
+            </article>
+
+            <article class="record-card">
+              <div class="profile-top">
+                <div class="avatar large amber">SB</div>
+                <div>
+                  <h2>Signal Bridge</h2>
+                  <p>@bridge_signal · Chatter</p>
+                </div>
+              </div>
+              <p class="record-copy">Infrastructure watcher with periodic archive and parser status posts.</p>
+              <dl class="profile-stats">
+                <div><dt>Posts</dt><dd>97</dd></div>
+                <div><dt>Mentions</dt><dd>33</dd></div>
+                <div><dt>Risk</dt><dd>Low</dd></div>
+              </dl>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="mentions">
+          <div class="content-grid">
+            <section class="feed">
+              <div class="section-header">
+                <div>
+                  <h2>Mentions queue</h2>
+                  <p>Grouped hits from posts, bios, reposts and imported archives.</p>
+                </div>
+                <button class="quiet-button" type="button" data-action="export-mentions">Export CSV</button>
+              </div>
+              <article class="mention-row">
+                <strong>legacy-export</strong>
+                <span>7 new matches</span>
+                <p>Appears in archive migration posts and SocialVault status threads.</p>
+              </article>
+              <article class="mention-row">
+                <strong>firmware</strong>
+                <span>19 new matches</span>
+                <p>Mostly connected to access-control vendors and staging release notes.</p>
+              </article>
+              <article class="mention-row">
+                <strong>parser rotation</strong>
+                <span>3 new matches</span>
+                <p>Low-volume phrase tied to import pipeline maintenance notices.</p>
+              </article>
+              <article class="mention-row">
+                <strong>socialvault-export.xml</strong>
+                <span>5 new matches</span>
+                <p>Filename pattern seen in import jobs and historical account bundles.</p>
+              </article>
+            </section>
+            <aside class="insights">
+              <section class="trend-card">
+                <h2>Source split</h2>
+                <ul>
+                  <li><span>Live posts</span><strong>64%</strong></li>
+                  <li><span>Imported archives</span><strong>23%</strong></li>
+                  <li><span>Profile bios</span><strong>13%</strong></li>
+                </ul>
+              </section>
+              <section class="response-card">
+                <h2>Review note</h2>
+                <pre>Mentions from imported archives are processed asynchronously and may appear 20-60 seconds after ingestion.</pre>
+              </section>
+              <section class="trend-card">
+                <h2>Entity actions</h2>
+                <ul>
+                  <li><span>Auto-merge aliases</span><strong>on</strong></li>
+                  <li><span>Archive backfill</span><strong>queued</strong></li>
+                  <li><span>CSV export</span><strong>ready</strong></li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="watchlists">
+          <div class="content-grid">
+            <section class="feed">
+              <div class="section-header">
+                <div>
+                  <h2>Tracked account groups</h2>
+                  <p>Curated collections used by analysts for ongoing monitoring.</p>
+                </div>
+                <button class="quiet-button" type="button" data-action="sync-watchlists">Sync lists</button>
+              </div>
+
+              <article class="watchlist-row">
+                <div>
+                  <strong>Access control vendors</strong>
+                  <p>Tracks firmware, badge readers, panel controllers and deployment windows.</p>
+                </div>
+                <div class="metrics">
+                  <span>12 accounts</span>
+                  <span>risk medium</span>
+                  <span>updated 8m ago</span>
+                </div>
+              </article>
+              <article class="watchlist-row">
+                <div>
+                  <strong>Regional operations</strong>
+                  <p>Public operational accounts for maintenance and incident announcements.</p>
+                </div>
+                <div class="metrics">
+                  <span>9 accounts</span>
+                  <span>risk low</span>
+                  <span>updated 14m ago</span>
+                </div>
+              </article>
+              <article class="watchlist-row">
+                <div>
+                  <strong>Legacy archive sources</strong>
+                  <p>Historical SocialVault exports retained for profile correlation and backfill.</p>
+                </div>
+                <div class="metrics">
+                  <span>38 imports</span>
+                  <span>risk unknown</span>
+                  <span>updated 1h ago</span>
+                </div>
+              </article>
+            </section>
+
+            <aside class="insights">
+              <section class="trend-card">
+                <h2>Watchlist health</h2>
+                <ul>
+                  <li><span>Accounts online</span><strong>29</strong></li>
+                  <li><span>Stale profiles</span><strong>3</strong></li>
+                  <li><span>Import-only profiles</span><strong>11</strong></li>
+                </ul>
+              </section>
+              <section class="response-card">
+                <h2>Sync status</h2>
+                <pre id="watchlist-status">All watchlists are in sync with the current workspace.</pre>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="archive">
+          <div class="content-grid">
+            <section class="feed" id="archive-list">
+              <div class="section-header">
+                <div>
+                  <h2>Archive Vault</h2>
+                  <p>Legacy SocialVault archives are accepted by a background compatibility worker.</p>
+                </div>
+                <button class="import-button" id="open-import-secondary" type="button">Import archive</button>
+              </div>
+              <article class="archive-row">
+                <div>
+                  <strong>socialvault-mira-2026-05.xml</strong>
+                  <span>processed · 428 posts · 1 profile · job imp_7f3a91</span>
+                </div>
+                <button class="quiet-button" type="button" data-action="inspect-archive" data-archive="socialvault-mira-2026-05.xml">Inspect</button>
+              </article>
+              <article class="archive-row">
+                <div>
+                  <strong>watchlist-lattice-q2.xml</strong>
+                  <span>processed · 211 posts · 3 profiles · job imp_3c180d</span>
+                </div>
+                <button class="quiet-button" type="button" data-action="inspect-archive" data-archive="watchlist-lattice-q2.xml">Inspect</button>
+              </article>
+              <article class="archive-row">
+                <div>
+                  <strong>bridge-signal-legacy.xml</strong>
+                  <span>queued · waiting for parser worker · job imp_91be02</span>
+                </div>
+                <button class="quiet-button" type="button" data-action="inspect-archive" data-archive="bridge-signal-legacy.xml">Inspect</button>
+              </article>
+            </section>
+            <aside class="insights">
+              <section class="response-card">
+                <h2>Last import job</h2>
+                <pre id="archive-job-status">No archive imported in this session.</pre>
+              </section>
+              <section class="trend-card">
+                <h2>Accepted sources</h2>
+                <ul>
+                  <li><span>SocialVault legacy archives</span><strong>enabled</strong></li>
+                  <li><span>Pulse native exports</span><strong>enabled</strong></li>
+                  <li><span>CSV contacts</span><strong>disabled</strong></li>
+                </ul>
+              </section>
+              <section class="response-card">
+                <h2>Worker profile</h2>
+                <pre>{
+  "queue": "archive-imports",
+  "source": "SocialVault",
+  "mode": "merge",
+  "format": "application/xml"
+}</pre>
+              </section>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="overlay hidden" id="import-overlay" aria-hidden="true">
+      <section class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+        <div class="drawer-header">
+          <div>
+            <p class="eyebrow">Archive Vault</p>
+            <h2 id="drawer-title">Import SocialVault archive</h2>
+          </div>
+          <button class="icon-button" id="close-import" type="button" aria-label="Close import panel">×</button>
+        </div>
+
+        <p class="drawer-copy">
+          Set the import parameters for a legacy account archive exported from SocialVault. The archive worker will fetch and normalize the selected bundle.
+        </p>
+
+        <section class="archive-params" aria-label="Archive document parameters">
+          <h3>Archive document</h3>
+          <label for="archive-filename">
+            <span>Bundle filename</span>
+            <input id="archive-filename" type="text" value="socialvault-export.xml">
+          </label>
+          <label for="archive-handle">
+            <span>Primary handle</span>
+            <input id="archive-handle" type="text" value="@mira_ops">
+          </label>
+          <label for="archive-display-name">
+            <span>Display name</span>
+            <input id="archive-display-name" type="text" value="Mira Operations">
+          </label>
+          <label for="archive-network">
+            <span>Network</span>
+            <select id="archive-network">
+              <option selected>Chatter</option>
+              <option>Threadline</option>
+              <option>SocialVault</option>
+            </select>
+          </label>
+          <label for="archive-risk">
+            <span>Risk</span>
+            <select id="archive-risk">
+              <option selected>low</option>
+              <option>medium</option>
+              <option>unknown</option>
+            </select>
+          </label>
+          <label for="archive-mode">
+            <span>Import mode</span>
+            <select id="archive-mode">
+              <option selected>merge</option>
+              <option>replace</option>
+              <option>validate-only</option>
+            </select>
+          </label>
+        </section>
+
+        <div class="drawer-actions">
+          <button class="primary-button" id="submit-import" type="button">Import to workspace</button>
+          <button class="secondary-button" id="load-sample" type="button">Load sample</button>
+        </div>
+      </section>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

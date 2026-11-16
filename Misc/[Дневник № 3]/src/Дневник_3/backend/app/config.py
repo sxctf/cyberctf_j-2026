@@ -1,0 +1,5 @@
+TTP = "flag{t1tp_tr1angl3_qu3st}"
+TOLERANCE = 15
+MIN_SIDE = 100
+REQUIRED_CLIENTS = 3
+MAX_CLIENTS = 5

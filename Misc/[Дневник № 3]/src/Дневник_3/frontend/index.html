@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TTP</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #050505;
+        overflow: hidden;
+        color: #e8ebff;
+        font-family: monospace;
+      }
+      svg {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .line {
+        stroke: #555;
+        stroke-width: 1;
+      }
+      .glow {
+        stroke: white;
+        stroke-width: 2;
+        filter: blur(2px);
+        opacity: 0.5;
+      }
+      body.zero .line {
+        stroke: #0f0;
+      }
+      body.zero .glow {
+        stroke: #0f0;
+        opacity: 1;
+        filter: blur(4px);
+      }
+      #container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        z-index: 10;
+      }
+      #status {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+      #ok {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0f0;
+        text-shadow: 0 0 10px #0f0;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.5s;
+      }
+      body.zero #ok {
+        opacity: 1;
+        transform: scale(1);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="status">Waiting for connection...</div>
+      <div id="ok">...</div>
+    </div>
+
+    <svg id="stage" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <g id="lines"></g>
+    </svg>
+
+    <script>
+      if (!localStorage.getItem("room")) {
+        (async () => {
+          const response = await fetch("http://10.67.0.10:9999/session");
+          const data = await response.json();
+          localStorage.setItem("room", data.room);
+        })();
+      }
+
+      const room = localStorage.getItem("room");
+
+      const socket = new WebSocket(`ws://10.67.0.10:9999/ws?room=${room}`);
+      const statusEl = document.getElementById("status");
+      const okEl = document.getElementById("ok");
+      const g = document.getElementById("lines");
+
+      function computeMyCenter() {
+        return {
+          cx: window.screenX + window.outerWidth / 2,
+          cy: window.screenY + window.outerHeight / 2
+        };
+      }
+
+      function updateVisuals(others) {
+        g.innerHTML = "";
+        const myPos = computeMyCenter();
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+
+        for (const pos of others) {
+          const dx = pos.cx - myPos.cx;
+          const dy = pos.cy - myPos.cy;
+          const relX = (dx / winW) * 100;
+          const relY = (dy / winH) * 100;
+
+          const group = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "g"
+          );
+          const line = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+          const glow = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+
+          [line, glow].forEach((el) => {
+            el.classList.add(el === line ? "line" : "glow");
+            el.setAttribute("x1", 50);
+            el.setAttribute("y1", 50);
+            el.setAttribute("x2", 50 + relX);
+            el.setAttribute("y2", 50 + relY);
+            group.appendChild(el);
+          });
+          g.appendChild(group);
+        }
+      }
+
+      socket.onopen = () => (statusEl.innerText = "TRIANGULATION MODE ACTIVE");
+
+      socket.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+
+        if (msg.type === "state") {
+          statusEl.innerText = `PERCENTAGES: ${msg.sync}%`;
+
+          if (msg.others) {
+            updateVisuals(msg.others);
+          }
+
+          if (msg.zero) {
+            document.body.classList.add("zero");
+            if (msg.ttp) okEl.innerText = msg.ttp;
+          } else {
+            document.body.classList.remove("zero");
+            okEl.innerText = "...";
+          }
+        }
+      };
+
+      socket.onclose = () => {
+        statusEl.innerText = "CONNECTION LOST. PLEASE REFRESH.";
+        statusEl.style.color = "red";
+      };
+
+      function frame() {
+        if (socket.readyState === WebSocket.OPEN) {
+          const pos = computeMyCenter();
+          socket.send(JSON.stringify(pos));
+        }
+        requestAnimationFrame(frame);
+      }
+
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

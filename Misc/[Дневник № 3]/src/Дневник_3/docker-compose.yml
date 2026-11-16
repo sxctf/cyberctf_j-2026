@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: trinity_backend
+    ports:
+      - "9999:9999"
+    restart: unless-stopped
+    profiles: ["dev", "prod"]
+
+  frontend:
+    image: nginx:alpine
+    container_name: trinity_frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    profiles: ["prod"]

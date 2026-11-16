@@ -1,0 +1,44 @@
+networks:
+  qubiq-net:
+    name: qubiq-net
+    driver: bridge
+
+services:
+  gateway:
+    build: .
+    image: qubiq-ctf:latest
+    container_name: ctf-gateway
+    command: gateway
+    ports:
+      - "7777:7777"
+      - "127.0.0.1:7789:7789"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./state:/app/state
+      - ./config.env:/app/config.env:ro
+    networks: [qubiq-net]
+    extra_hosts:
+      - "zerotrace.jeopardy.ctflab.local:10.63.0.40"
+    depends_on: [auth, verify]
+    restart: unless-stopped
+
+  auth:
+    build: .
+    image: qubiq-ctf:latest
+    container_name: ctf-auth
+    command: auth
+    volumes:
+      - ./auth-data:/app/auth-data:ro
+      - ./config.env:/app/config.env:ro
+    networks: [qubiq-net]
+    restart: unless-stopped
+
+  verify:
+    build: .
+    image: qubiq-ctf:latest
+    container_name: ctf-verify
+    command: verify
+    volumes:
+      - ./config.env:/app/config.env:ro
+    networks: [qubiq-net]
+    restart: unless-stopped
