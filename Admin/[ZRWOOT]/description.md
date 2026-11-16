@@ -6,4 +6,6 @@
 
 Задание необходимо запускать через firecracker (https://github.com/firecracker-microvm/firecracker)
 
+Дополнительный необходимый файл для задания доступен по ссылке: https://disk.yandex.ru/client/disk/cyberctf_j-2026/Admin/%5BZRWOOT%5D/src
+
 Формат флага: flag{\*}
